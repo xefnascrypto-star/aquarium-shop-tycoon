@@ -1,4 +1,4 @@
-# Aquarium Shop Tycoon · v0.2
+# Aquarium Shop Tycoon · v0.3
 Juego de gestión isométrico/cozy, en español y adaptable a móvil.
 ## Jugar
 Abre https://xefnascrypto-star.github.io/aquarium-shop-tycoon/
@@ -13,3 +13,6 @@ Sin dependencias de producción ni proceso de compilación. Rutas relativas comp
 Instala las dependencias con npm install; ejecuta npm run preview y, en otro terminal, npm test. Las pruebas usan Playwright con Microsoft Edge instalado.
 Verificación: ventas, niveles, pedidos, persistencia, bonus offline, bloqueos de mejoras, capacidad, menús, teclado, zoom y anchos 320/390/768/1280.
 
+
+## v0.3 · Primeros pasos
+Recorrido de seis objetivos sin recompensas monetarias: primera venta, recibir un pedido, estantería, tercer acuario, nivel 8 y almacén. El progreso se deriva de la partida existente; las partidas antiguas con estantería superan el paso de reabastecimiento. Contador de ventas hacia el próximo nivel y aviso visible de stock/entrega. Pedidos de 1 o 5 unidades al mismo precio unitario. No cambia la economía base.

@@ -1,5 +1,5 @@
 const panel=$('panel');
-let selectedProduct='betta',toastTimer;
+let selectedProduct='betta',toastTimer,orderQuantity=5;
 const titles={stock:'El proveedor',upgrades:'Un poco más grande',activity:'Vida en la tienda',settings:'Tu partida',object:'Acuario'};
 function showPanel(name,title){
  document.querySelectorAll('[data-section]').forEach(s=>s.hidden=s.dataset.section!==name);
@@ -8,21 +8,21 @@ function showPanel(name,title){
 document.querySelectorAll('[data-panel]').forEach(b=>b.onclick=()=>showPanel(b.dataset.panel));
 $('closePanel').onclick=()=>panel.close();
 panel.addEventListener('click',e=>{if(e.target===panel){const r=panel.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)panel.close()}});
-document.querySelectorAll('[data-order]').forEach(b=>b.onclick=()=>order(b.dataset.order,5));
+document.querySelectorAll('[data-order]').forEach(b=>b.onclick=()=>order(b.dataset.order,orderQuantity));
 $('shelfBtn').onclick=upgradeShelf;$('tankBtn').onclick=upgradeTank;$('warehouseBtn').onclick=upgradeWarehouse;
 $('saveBtn').onclick=()=>saveGame();$('resetBtn').onclick=resetGame;
-function objectInfo(){const p=products[selectedProduct];$('objectInfo').innerHTML=`<p>${state.stock[selectedProduct]} unidades disponibles · venta automática</p><div class="stockline"><span>Precio de venta</span><b>${p.sell} 🪙</b></div><div class="stockline"><span>Coste por unidad</span><b>${p.buy} 🪙</b></div><p>${selectedProduct==='food'?'La comida ocupa 1 de volumen por unidad.':'Los peces no consumen volumen de almacén en esta versión.'}</p>`;$('objectOrder').textContent=`Pedir 5 · ${p.buy*5} 🪙`;$('objectOrder').disabled=!!state.delivery||state.money<p.buy*5||used()+p.vol*5>state.capacity;}
+function objectInfo(){const p=products[selectedProduct];$('objectInfo').innerHTML=`<p>${state.stock[selectedProduct]} unidades disponibles · venta automática</p><div class="stockline"><span>Precio de venta</span><b>${p.sell} 🪙</b></div><div class="stockline"><span>Coste por unidad</span><b>${p.buy} 🪙</b></div><p>${selectedProduct==='food'?'La comida ocupa 1 de volumen por unidad.':'Los peces no consumen volumen de almacén en esta versión.'}</p>`;$('objectOrder').textContent=`Pedir 5 · ${p.buy*5} 🪙`;$('objectOrder').disabled=!!state.delivery||state.money<p.buy*5||used()+p.vol*5>state.capacity;$('objectSingle').textContent='Pedir 1 · '+p.buy+' 🪙';$('objectSingle').disabled=!!state.delivery||state.money<p.buy||used()+p.vol>state.capacity;$('objectOrderHelp').textContent=state.delivery?'Hay un pedido en camino.':state.money<p.buy?'Necesitas '+p.buy+' monedas para pedir una unidad.':used()+p.vol>state.capacity?'El almacén está lleno. Espera a vender comida.':'Entrega en 30 segundos. Puedes pedir una sola unidad.';}
 function openObject(id){
  if(['betta','comet','shelf'].includes(id)){selectedProduct=id==='shelf'?'food':id;objectInfo();showPanel('object',id==='shelf'?'Comida y estantería':products[id].name+'s');}
  else if(id==='warehouse')showPanel('stock','La trastienda');
  else showPanel('activity',id==='door'?'¡Bienvenidos!':id==='customer'?'De visita':id==='clerk'?'Tu dependiente':'El mostrador');
 }
-$('objectOrder').onclick=()=>order(selectedProduct,5);
+$('objectOrder').onclick=()=>order(selectedProduct,5);$('objectSingle').onclick=()=>order(selectedProduct,1);
 let dragged=false;
 document.querySelectorAll('[data-object]').forEach(g=>{g.addEventListener('click',()=>{if(!dragged)openObject(g.dataset.object)});g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openObject(g.dataset.object)}})});
 function syncScene(){
  $('shelfExtra').style.display=state.shelf?'block':'none';$('warehouseExtra').style.display=state.warehouse?'block':'none';
- document.querySelectorAll('[data-order]').forEach(b=>{const p=products[b.dataset.order];b.disabled=!!state.delivery||state.money<p.buy*5||used()+p.vol*5>state.capacity});
+ document.querySelectorAll('[data-order]').forEach(b=>{const p=products[b.dataset.order];b.textContent=orderQuantity+' × '+p.name+' · '+(p.buy*orderQuantity)+' 🪙';b.disabled=!!state.delivery||state.money<p.buy*orderQuantity||used()+p.vol*orderQuantity>state.capacity});
  $('shelfBtn').disabled=state.shelf||state.money<250;$('tankBtn').disabled=!state.shelf||state.tank3||state.money<350;$('warehouseBtn').disabled=state.level<8||state.warehouse||state.money<4000;
  $('goal').textContent=!state.shelf?'Tu primera estantería':!state.tank3?'Un hogar para más peces':!state.warehouse?'Una tienda con futuro':'Tu pequeño océano crece';
  $('goalDetail').textContent=!state.shelf?'Ahorra 250 monedas y haz crecer tu tienda.':!state.tank3?'Construye el tercer acuario por 350 monedas.':!state.warehouse?'Alcanza el nivel 8 para ampliar el almacén.':'Sigue reponiendo y atendiendo a tus visitantes.';
