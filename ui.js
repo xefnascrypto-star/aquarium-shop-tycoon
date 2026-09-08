@@ -14,12 +14,14 @@ $('saveBtn').onclick=()=>saveGame();$('resetBtn').onclick=resetGame;
 function objectInfo(){const p=products[selectedProduct];$('objectInfo').innerHTML=`<p>${state.stock[selectedProduct]} unidades disponibles · venta automática</p><div class="stockline"><span>Precio de venta</span><b>${p.sell} 🪙</b></div><div class="stockline"><span>Coste por unidad</span><b>${p.buy} 🪙</b></div><p>${selectedProduct==='food'?'La comida ocupa 1 de volumen por unidad.':'Los peces no consumen volumen de almacén en esta versión.'}</p>`;$('objectOrder').textContent=`Pedir 5 · ${p.buy*5} 🪙`;$('objectOrder').disabled=!!state.delivery||state.money<p.buy*5||used()+p.vol*5>state.capacity;$('objectSingle').textContent='Pedir 1 · '+p.buy+' 🪙';$('objectSingle').disabled=!!state.delivery||state.money<p.buy||used()+p.vol>state.capacity;$('objectOrderHelp').textContent=state.delivery?'Hay un pedido en camino.':state.money<p.buy?'Necesitas '+p.buy+' monedas para pedir una unidad.':used()+p.vol>state.capacity?'El almacén está lleno. Espera a vender comida.':'Entrega en 30 segundos. Puedes pedir una sola unidad.';}
 function openObject(id){
  if(['betta','comet','shelf'].includes(id)){selectedProduct=id==='shelf'?'food':id;objectInfo();showPanel('object',id==='shelf'?'Comida y estantería':products[id].name+'s');}
+ else if(id==='decoration'){window.shopEditor?.begin();return;}
  else if(id==='warehouse')showPanel('stock','La trastienda');
  else showPanel('activity',id==='door'?'¡Bienvenidos!':id==='customer'?'De visita':id==='clerk'?'Tu dependiente':'El mostrador');
 }
 $('objectOrder').onclick=()=>order(selectedProduct,5);$('objectSingle').onclick=()=>order(selectedProduct,1);
 let dragged=false;
-document.querySelectorAll('[data-object]').forEach(g=>{g.addEventListener('click',()=>{if(!dragged)openObject(g.dataset.object)});g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openObject(g.dataset.object)}})});
+world.addEventListener('click',e=>{const g=e.target.closest('[data-object]');if(g&&!dragged&&!window.shopEditor?.active)openObject(g.dataset.object)});
+world.addEventListener('keydown',e=>{const g=e.target.closest('[data-object]');if(g&&!window.shopEditor?.active&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openObject(g.dataset.object)}});
 function syncScene(){
  $('shelfExtra').style.display=state.shelf?'block':'none';$('warehouseExtra').style.display=state.warehouse?'block':'none';
  document.querySelectorAll('[data-order]').forEach(b=>{const p=products[b.dataset.order];b.textContent=orderQuantity+' × '+p.name+' · '+(p.buy*orderQuantity)+' 🪙';b.disabled=!!state.delivery||state.money<p.buy*orderQuantity||used()+p.vol*orderQuantity>state.capacity});
@@ -39,7 +41,7 @@ function camera(){panX=Math.max(-300,Math.min(300,panX));panY=Math.max(-200,Math
 function changeZoom(n){zoom=Math.max(.85,Math.min(1.8,n));camera()}
 $('zoomIn').onclick=()=>changeZoom(zoom+.15);$('zoomOut').onclick=()=>changeZoom(zoom-.15);$('zoomReset').onclick=()=>{zoom=1;panX=panY=0;camera()};
 const viewport=$('viewport');
-viewport.addEventListener('pointerdown',e=>{if(e.target.closest('button'))return;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});lastPoint={x:e.clientX,y:e.clientY};dragged=false;lastDistance=0});
+viewport.addEventListener('pointerdown',e=>{if(window.shopEditor?.active||e.target.closest('button'))return;pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});lastPoint={x:e.clientX,y:e.clientY};dragged=false;lastDistance=0});
 window.addEventListener('pointermove',e=>{if(!pointers.has(e.pointerId))return;const prev=pointers.get(e.pointerId);pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});if(pointers.size===2){const [a,b]=[...pointers.values()],d=Math.hypot(a.x-b.x,a.y-b.y);if(lastDistance)changeZoom(zoom*d/lastDistance);lastDistance=d;dragged=true}else{const dx=e.clientX-prev.x,dy=e.clientY-prev.y;if(Math.hypot(e.clientX-lastPoint.x,e.clientY-lastPoint.y)>5)dragged=true;if(dragged){const scale=1000/$('scene').getBoundingClientRect().width;panX+=dx*scale;panY+=dy*scale;camera()}}});
 for(const event of ['pointerup','pointercancel'])window.addEventListener(event,e=>{pointers.delete(e.pointerId);lastDistance=0});
 viewport.addEventListener('wheel',e=>{e.preventDefault();changeZoom(zoom-e.deltaY*.001)},{passive:false});

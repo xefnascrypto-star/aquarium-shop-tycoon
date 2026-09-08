@@ -1,2 +1,2 @@
-{"name":"aquarium-shop-tycoon","version":"0.3.0","private":true,"scripts":{"preview":"node preview.cjs","test":"node regression.cjs"},"devDependencies":{"playwright":"1.62.1"}}
+{"name":"aquarium-shop-tycoon","version":"0.4.0","private":true,"scripts":{"preview":"node preview.cjs","test":"node layout.test.cjs && node regression.cjs && node visitors.test.cjs && node editor.test.cjs"},"devDependencies":{"playwright":"1.62.1"}}
 

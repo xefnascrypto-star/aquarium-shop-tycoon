@@ -1,0 +1,11 @@
+# Distribución de tienda — v1
+- Catálogo: un tipo define huella rectangular en casillas, etiqueta, acción y requisito de compra. No contiene posiciones.
+- Instancia: id estable, kind, roomId, x, y, rotation. Dos partidas del mismo nivel pueden guardar coordenadas distintas.
+- Habitación: id, type, width, depth, origin y reserved. Las zonas reservadas protegen puertas. El origen sólo afecta al dibujo.
+- Proyección: casillas de 60×30 píxeles isométricos. La entrada de puntero se transforma con la matriz inversa del mundo, por lo que respeta zoom y desplazamiento.
+- Validación pura: dimensiones según orientación, límites, entrada y objetos adquiridos. Compartir un borde es válido.
+- Transacción: la previsualización modifica un borrador. Confirmar valida otra vez y actualiza la partida; Cancelar o Terminar lo descartan. Deshacer guarda instantáneas de distribución, nunca de monedas/stock, y se limpia cuando cambia el mobiliario adquirido.
+- Migración: partidas sin layout reciben defaults. Los IDs y tipos conocidos se preservan. Una posición inválida se reubica en una celda libre. Las habitaciones se derivan de definiciones de juego autorizadas, no de datos arbitrarios del guardado.
+- Ampliaciones futuras: añadir definiciones de sala y adyacencias/puertas; desbloquearlas desde economía; extender la migración para mantener IDs de salas y objetos. El modelo admite validar por roomId. No se crean todavía los departamentos ni se alteran los niveles.
+- Orientaciones actuales: 0° y 90°, con intercambio de huella y arte reflejado sin inclinar sus verticales. Los rótulos mantienen lectura normal. Una futura librería de vistas a cuatro lados puede ampliar rotaciones sin modificar IDs.
+- Circulación: independiente de colocación. Las ventas se pausan durante edición. Los puntos de visita se actualizan desde el objeto; las rutas continúan siendo aproximadas hasta implementar navegación/colas.

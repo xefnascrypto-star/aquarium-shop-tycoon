@@ -13,3 +13,16 @@
 @media(max-width:650px){.shop-status{margin-top:-18px;margin-bottom:10px;font-size:11px}.shop-status:not([hidden])+.guidance{margin-top:0}#levelProgress{font-size:7px}.pill{padding:7px 6px;gap:3px}.brand{font-size:11px}}
 
 @media(min-width:651px){#viewport{width:min(100%,760px);margin-top:18px}.camera{bottom:55px}.shop-status{margin-top:-82px}}
+
+/* Visitors are positioned by the shop clock, not looping CSS. */
+.live-visitor{cursor:pointer}.visitor-bubble{pointer-events:none}.visitor-bubble rect{fill:#fffae8;stroke:#d5dfc7;stroke-width:1.5}.visitor-bubble text{font:12px 'Trebuchet MS',sans-serif;fill:#3c7061}.live-visitor[data-phase=leaving] .visitor-bubble rect{fill:#e9f3d9}.live-visitor[data-result=empty] .visitor-bubble rect{fill:#fff0d6}
+
+/* Placement uses the same art, with independent floor transforms. */
+.mirrored-art text{transform-box:fill-box;transform-origin:center;transform:scaleX(-1)}
+.selected-object{opacity:.8}
+#editorBar[hidden]{display:none}#editorBar{position:fixed;bottom:max(12px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);z-index:6;width:440px;max-width:calc(100% - 20px);padding:15px;background:#fffdf0;border:2px solid #d8e5ce;border-radius:22px;box-shadow:0 12px 60px #315f4f33;color:#315c4c}
+.edit-heading{display:flex;justify-content:space-between;align-items:center}.edit-heading button{background:#e5ecdc;padding:10px;border-radius:12px;min-height:44px}
+#editHelp{font-size:12px;line-height:1.4;min-height:34px;margin:8px 0}
+#editorBar label{font-size:11px;margin-right:10px}#editObject{max-width:80%;border:1px solid #c8d8bb;background:#fffdf5;color:#315c4c;padding:8px;border-radius:8px}
+.edit-move,.edit-actions{display:flex;gap:6px;margin-top:9px}#editorBar .edit-move button,#editorBar .edit-actions button{flex:1;min-height:44px;background:#e6eddc;border-radius:10px;padding:6px;font-size:13px}#editorBar #editConfirm{background:#397f6d;color:white}.editing .guidance,.editing #goalProgress,.editing .dock,.editing .hint,.editing #shopStatus{visibility:hidden}.editing #visitors{display:none}.editing #toast{bottom:285px}.editing .camera{z-index:2}
+@media(max-width:650px){.dock button{padding:7px 8px;font-size:10px}.editing .game{padding-bottom:270px}.editing #viewport{margin-top:0}.editing .camera{bottom:0}}
