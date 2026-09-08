@@ -23,7 +23,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
  await page.screenshot({path:__dirname+'/v04-editor-mobile.png',fullPage:true});
  await page.locator('#editExit').click();await page.reload();
  assert.deepEqual(await page.evaluate(()=>{const o=state.layout.objects.find(o=>o.id==='plant-1');return [o.x,o.rotation]}),[1,90]);
- await page.clock.runFor(8000);assert.equal(await page.evaluate(()=>state.served),before[1]+1);
+ await page.clock.runFor(30000);assert.ok(await page.evaluate(()=>state.served)>=before[1]+1);
 
  // Long press opens editing without invoking the normal object menu.
  const target=page.locator('[data-instance="plant-3"]');

@@ -1,6 +1,6 @@
 const panel=$('panel');
 let selectedProduct='betta',toastTimer,orderQuantity=5;
-const titles={stock:'El proveedor',upgrades:'Un poco más grande',activity:'Vida en la tienda',settings:'Tu partida',object:'Acuario'};
+const titles={stock:'El proveedor',upgrades:'Un poco más grande',activity:'Vida en la tienda',settings:'Tu partida',object:'Acuario',circulation:'Circulación de la tienda'};
 function showPanel(name,title){
  document.querySelectorAll('[data-section]').forEach(s=>s.hidden=s.dataset.section!==name);
  $('panelTitle').textContent=title||titles[name];if(!panel.open)panel.showModal();

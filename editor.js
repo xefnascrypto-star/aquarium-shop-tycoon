@@ -5,6 +5,7 @@
  let active=false,draft=null,history=[],gesture=null,longPress=null,unlock=!!state.tank3;
  const bar=$('editorBar');
  const current=()=>state.layout;
+ function constructionLayout(){const l=M.clone(current());for(const c of window.shopCirculation?.occupied()||[]){const room=l.rooms.find(r=>r.id===c.roomId);if(room)room.reserved.push({x:c.x,y:c.y,width:1,depth:1})}return l}
  const working=()=>{const layout=M.clone(current());if(draft)layout.objects=layout.objects.map(o=>o.id===draft.id?{...draft}:o);return layout};
  function paint(){
   drawFurniture(working(),state);
@@ -22,6 +23,7 @@
   for(const id of ['editRotate','editCancel'])$(id).disabled=!draft;
   document.querySelectorAll('[data-move]').forEach(b=>b.disabled=!draft);
   $('editUndo').disabled=!history.length;
+  updateAccessibility(working(),active);
  }
  function grid(){
   const room=current().rooms[0],lines=[];
@@ -68,7 +70,7 @@
   const point=new DOMPoint(event.clientX,event.clientY).matrixTransform(world.getScreenCTM().inverse());
   return M.unproject(current().rooms[0],point.x,point.y);
  }
- window.shopEditor={canPlace(kind){const o=current().objects.find(o=>o.kind===kind);const s={...state,[kind]:true};return o&&(!M.validate(current(),o,s)||!!M.findFree(current(),o,s))},get active(){return active},begin,end,get layout(){return M.clone(current())}};
+ window.shopEditor={canPlace(kind){const o=current().objects.find(o=>o.kind===kind);const s={...state,[kind]:true};return o&&(!M.validate(constructionLayout(),o,s)||!!M.findFree(constructionLayout(),o,s))},get active(){return active},begin,end,get layout(){return M.clone(current())}};
  $('editStart').onclick=()=>begin();$('editExit').onclick=end;$('editConfirm').onclick=confirm;$('editUndo').onclick=undo;
  $('editCancel').onclick=()=>{draft=null;refreshSelect();paint()};
  $('editRotate').onclick=()=>{if(draft){draft.rotation=draft.rotation===0?90:0;paint()}};
@@ -101,7 +103,7 @@
   if(unlock!==!!state.tank3){
    unlock=!!state.tank3;history=[];draft=null;
    const third=current().objects.find(o=>o.kind==='tank3');
-   if(M.validate(current(),third,state)){const free=M.findFree(current(),third,state);if(free)Object.assign(third,free)}
+   if(M.validate(constructionLayout(),third,state)){const free=M.findFree(constructionLayout(),third,state);if(free)Object.assign(third,free)}
    refreshSelect();paint();saveGame(false);
   }
  });

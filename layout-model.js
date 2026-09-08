@@ -4,7 +4,7 @@
  const roomTypes=['retail','freshwater','plants','marine','reef','warehouse','workshop','pond-koi'];
  const defaults=[['betta-1','betta',0,2],['comet-1','comet',0,6],['shelf-1','shelf',5,0],['counter-1','counter',6,8],['plant-1','plant',0,0],['plant-2','plant',10,2],['plant-3','plant',0,10],['warehouse-1','warehouse',10,5],['tank-3','tank3',5,3]];
  const clone=v=>JSON.parse(JSON.stringify(v));
- function create(){return {version:1,rooms:[{id:'main',type:'retail',width:12,depth:12,origin:{x:500,y:185},reserved:[{x:10,y:0,width:2,depth:2,label:'Entrada'}]}],objects:defaults.map(([id,kind,x,y])=>({id,kind,roomId:'main',x,y,rotation:0}))}}
+ function create(){return {version:1,rooms:[{id:'main',type:'retail',width:12,depth:12,origin:{x:500,y:185},entrance:{x:10,y:0},reserved:[{x:10,y:0,width:2,depth:2,label:'Entrada'}]}],objects:defaults.map(([id,kind,x,y])=>({id,kind,roomId:'main',x,y,rotation:0}))}}
  function owned(o,state={}){return !catalog[o.kind].unlock||!!state[catalog[o.kind].unlock]}
  function footprint(o){const c=catalog[o.kind];return {x:o.x,y:o.y,width:o.rotation===90?c.depth:c.width,depth:o.rotation===90?c.width:c.depth}}
  function overlaps(a,b){return a.x<b.x+b.width&&a.x+a.width>b.x&&a.y<b.y+b.depth&&a.y+a.depth>b.y}
