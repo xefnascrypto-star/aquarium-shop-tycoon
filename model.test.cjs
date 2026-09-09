@@ -1,5 +1,5 @@
 const assert=require('node:assert/strict'),M=require('./layout-model.js'),N=require('./navigation.js'),D=require('./design.js');
-let state={},l=M.create();assert.equal(l.rooms[0].width,12);assert.equal(l.objects.filter(o=>M.owned(o,state)&&['betta','comet','tank3'].includes(o.kind)).length,2);
+let state={},l=M.create();assert.equal(l.rooms[0].width,14);assert.equal(l.objects.filter(o=>M.owned(o,state)&&['betta','comet','tank3'].includes(o.kind)).length,2);
 for(const k of ['betta','comet','food','conditioner'])assert.ok(N.plan(N.build(l,state),k));
 state.shelf=true;assert.equal(N.build(l,state).grids.main.objects.some(o=>o.kind==='shelf'),false,'paid pending furniture is not an obstacle');
 const shelf=l.objects.find(o=>o.kind==='shelf');shelf.placed=true;

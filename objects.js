@@ -19,6 +19,6 @@ function objectMarkup(o,layout){
 }
 function drawFurniture(layout,gameState={}){
  const items=layout.objects.filter(o=>ShopLayout.owned(o,gameState)).sort((a,b)=>{const aa=ShopLayout.footprint(a),bb=ShopLayout.footprint(b);return (a.x+a.y+aa.width+aa.depth)-(b.x+b.y+bb.width+bb.depth)});
- document.getElementById('furnitureLayer').innerHTML=items.map(o=>objectMarkup(o,layout)).join('');
+ document.getElementById('furnitureLayer').innerHTML=ShopDepth.sort(items.map(o=>({o,bounds:ShopLayout.footprint(o)}))).map(({o})=>objectMarkup(o,layout)).join('');
 }
 drawFurniture(ShopLayout.create());

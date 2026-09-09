@@ -1,10 +1,10 @@
 {
   "name": "aquarium-shop-tycoon",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "scripts": {
     "preview": "node preview.cjs",
-    "test": "node model.test.cjs && node slice.test.cjs && node safeguards.test.cjs"
+    "test": "node model.test.cjs && node polish-model.test.cjs && node polish.test.cjs && node moments.test.cjs && node safeguards.test.cjs && node slice.test.cjs"
   },
   "devDependencies": {
     "playwright": "1.62.1"

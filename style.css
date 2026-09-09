@@ -42,3 +42,5 @@
 @media(max-width:390px){.brand{font-size:9px}.brand small{font-size:6px}.logo{padding:4px 6px}.currencies{gap:3px}.pearl-pill{font-size:9px}.pill b{font-size:14px}.pill{padding:7px 5px}.hud .icon{width:31px}.product-row{gap:5px}.product-row button{font-size:10px;padding:7px}}
 
 @media(max-width:650px){.expanded #viewport{width:112%;margin-top:8px}.expanded .camera{right:5%;bottom:18px}.expanded .shop-status{margin-top:0}}
+
+.moment-note{position:relative;z-index:2;width:440px;max-width:95%;background:#f8f6e4;border:1px solid #d3debd;border-radius:16px;padding:12px 14px;margin:0 0 14px;box-shadow:0 5px 14px #577f6112}.moment-note[hidden]{display:none}.moment-note b{font-size:13px}.moment-note p{font-size:11px;line-height:1.5;margin:5px 0 9px}.moment-note button{min-height:40px;border-radius:10px;padding:8px 12px;background:#e0ead3;font-size:11px}.moment-note button:first-child{background:#397f6d;color:#fff9e6}#momentActions{display:flex;gap:7px;flex-wrap:wrap}.editing .moment-note{display:none}.moment-note:not([hidden])~.guidance{margin-top:0}.moment-note:not([hidden])~.shop-status{margin-top:0}

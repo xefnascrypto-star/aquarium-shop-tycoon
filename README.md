@@ -1,4 +1,4 @@
-# Aquarium Shop Tycoon · v0.6
+# Aquarium Shop Tycoon · v0.7
 Demo cozy/isométrica de niveles 1–10. Jugar: https://xefnascrypto-star.github.io/aquarium-shop-tycoon/
 
 ## Recorrido jugable
@@ -6,7 +6,7 @@ Empieza con 500 monedas, dos acuarios, mostrador, stock gratuito y capacidad 20.
 - Nivel 2: estantería 250, proveedor local y primer pedido.
 - Nivel 3: acuario de 60 L 350, Guppy y Platy.
 - Nivel 4: filtro, calentador, luz, sifón y termómetro; pedido de acuario completo.
-- Nivel 5: ampliación 1.200, de 12 × 12 a 18 × 16 casillas; exige 25 ventas y un conjunto completo, concede 10 Perlas. Cuarto/quinto acuario y segunda estantería opcionales.
+- Nivel 5: ampliación 1.200, de 14 × 13 a 18 × 16 casillas; exige 25 ventas y un conjunto completo, concede 10 Perlas. Cuarto/quinto acuario y segunda estantería opcionales.
 - Nivel 6: batería Agua Dulce I 2.000; Neón, Molly, Corydora y Ancistrus, con ventas en grupos.
 - Nivel 7: competencia entre proveedor local (precio base, 30 s, sin mínimo) y mayorista (aproximadamente 15% menos, 90 s, mínimo 10 del mismo producto). Lotes 1, 5, 10 o 20.
 - Nivel 8: compras perdidas por stock/acceso y Almacén I 4.000, capacidad 50.
@@ -28,7 +28,7 @@ Partidas nuevas a ritmo ×4; Ajustes permite ×1, ×4 o ×12. Acelera clientes, 
 Al ocultar/cerrar se pausa la simulación. Editar pausa visitas y salarios, mientras continúan entregas. Sin fondos para un salario, el refuerzo espera al siguiente pago posible.
 Un Cometa adelantado por el proveedor, con deuda de 15 a devolver en la siguiente venta, evita quedar sin forma de reponer cuando no queda stock, entrega ni saldo suficiente.
 
-Se conserva localStorage aquariumShopV01. Las partidas antiguas migran preservando economía y colocaciones válidas. Esquema 6 y layout versión 2 guardan posiciones, orientación, compras pendientes, pedidos y empleados. El bonus offline provisional anterior se sustituye por pausa real.
+Se conserva localStorage aquariumShopV01. Las partidas antiguas migran preservando economía y colocaciones válidas. Esquema 6 y layout versión 3 guardan posiciones, orientación, compras pendientes, pedidos y empleados. El bonus offline provisional anterior se sustituye por pausa real.
 
 ## Desarrollo y pruebas
 Sin dependencias de producción ni compilación. GitHub Pages: main, raíz; recursos relativos versionados.
@@ -37,4 +37,18 @@ Instala dependencias con npm install. Inicia npm run preview y, en otro terminal
 - slice.test.cjs: partida nueva completa sin fijar saldo, nivel o XP; clientes físicos, pedidos, editor, contratación e inversión.
 - safeguards.test.cjs: idempotencia, reservas, capacidad, salarios, deshacer y accesos bloqueados.
 
-playthrough-v06.json recoge la prueba final: nivel 10 con 12.135 monedas; elección de Plantas I y saldo final 135. Pruebas responsive a 320/390/768/1280. El balance sigue pendiente de pruebas con jugadores.
+playthrough-v06.json conserva el informe de la versión anterior; playthrough-v07.json registra la regresión completa de esta versión. Pruebas responsive a 320/390/768/1280. El balance sigue pendiente de pruebas con jugadores.
+
+## Pulido v0.7
+El local inicial pasa de 144 a 182 casillas (14 × 13): +26,4% de superficie. Las partidas antiguas reciben el espacio adicional sin mover sus muebles válidos. La ampliación comprada sigue siendo de 18 × 16.
+Los límites de la habitación actúan como paredes; el modelo admite también obstáculos interiores. A* evita zigzags innecesarios. Las interacciones están fuera de la huella del mueble y aparecen como puntos azules al seleccionarlo en el editor.
+El personaje tiene un radio físico de 0,28 casillas. Los giros se redondean dentro de casillas libres y el movimiento conserva la distancia sobrante de cada paso; la actualización visual sigue los fotogramas del navegador. Una comprobación de recorrido bloquea cualquier segmento inválido. El orden de dibujo compara las huellas, corrigiendo la apariencia de estar dentro de un acuario al situarse delante.
+Desde el comienzo algunas visitas buscan una especie concreta. Si no encuentran acceso a su expositor, se marchan; las visitas sin preferencia pueden elegir otro producto accesible.
+En niveles 1–4 aparecen, de forma espaciada y sin ventanas modales:
+- Un vecino que pide dos peces: reservar stock y atenderlo físicamente o rechazarlo sin penalización.
+- Una oferta local del 20%, de un solo uso y con 90 segundos de juego para aprovecharla.
+- Una recomendación de Betta o Cometa que influye brevemente en las consultas de los visitantes.
+
+Encargos, ofertas y decisiones se guardan con la partida. No hay nuevos niveles, monedas ni grandes sistemas. Las ventas mantienen el efecto de monedas; ventas y pérdidas rutinarias quedan en el registro y los bocadillos, sin encadenar avisos flotantes.
+characters.js es un adaptador sustituible (crear, actualizar pose y retirar personaje). motion.js contiene la locomoción independiente del arte. La animación provisional añade orientación y una oscilación leve al caminar, respetando la preferencia de movimiento reducido.
+polish-model.test.cjs y polish.test.cjs prueban tres distribuciones distintas de tres acuarios, rotaciones, pasos estrechos, interacción, profundidad, paredes y un pasillo bloqueado/reabierto. polish-v07-report.json contiene las comprobaciones del navegador. moments.test.cjs verifica reservas, cobro real, persistencia, descuentos, caducidad y coexistencia con el pedido completo.

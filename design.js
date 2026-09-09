@@ -22,7 +22,7 @@ discus:{name:'Disco',buy:100,sell:190,vol:0,level:10,display:'professional',inve
 const upgrades={
 shelf:{name:'Estantería',cost:250,level:2,kind:'shelf',detail:'Expón comida, acondicionador y futuro equipamiento.'},
 tank3:{name:'Acuario de 60 L',cost:350,level:3,kind:'tank3',detail:'Un hogar para Guppys y Platys. Tú eliges su sitio.'},
-expansion:{name:'Ampliación de la tienda',cost:1200,level:5,detail:'12 × 12 → 18 × 16 casillas. Requiere 25 ventas y un acuario completo. +10 Perlas.'},
+expansion:{name:'Ampliación de la tienda',cost:1200,level:5,detail:'14 × 13 → 18 × 16 casillas. Requiere 25 ventas y un acuario completo. +10 Perlas.'},
 tank4:{name:'Cuarto acuario',cost:350,level:5,kind:'tank4',detail:'Otro expositor para Bettas y Cometas. Requiere ampliación.'},
 tank5:{name:'Quinto acuario',cost:350,level:5,kind:'tank5',detail:'Otro expositor para Guppys y Platys. Requiere ampliación.'},
 shelf2:{name:'Segunda estantería',cost:250,level:5,kind:'shelf2',detail:'Más opciones de distribución. Requiere ampliación.'},

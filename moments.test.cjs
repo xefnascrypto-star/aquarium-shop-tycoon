@@ -1,0 +1,22 @@
+const {chromium}=require('playwright'),assert=require('node:assert/strict');
+(async()=>{const b=await chromium.launch({headless:true,channel:'msedge'});try{
+const p=await b.newPage({viewport:{width:390,height:844}}),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.clock.install({time:new Date('2026-09-09T12:00:00Z')});await p.clock.pauseAt(new Date('2026-09-09T12:00:01Z'));await p.goto('http://127.0.0.1:4174');
+await p.evaluate(()=>{state.speed=1;state.moments.cooldown=0;ShopMoments.tick(.1)});
+assert.equal(await p.locator('#panel').isVisible(),false);assert.equal(await p.locator('#momentBar').isVisible(),true);
+await p.locator('[data-moment="accept"]').click();assert.equal(await p.evaluate(()=>ShopMoments.reserved('comet')),2);
+await p.evaluate(()=>{state.stock=Object.fromEntries(Object.keys(products).map(k=>[k,k==='comet'?2:0]));saveGame(false)});
+assert.equal(await p.evaluate(()=>sellBasket({comet:1})),null);const request=await p.evaluate(()=>state.moments.request.id);
+await p.reload();assert.equal(await p.evaluate(()=>state.moments.request.id),request);await p.clock.runFor(35000);
+assert.equal(await p.evaluate(()=>state.moments.completed),1);assert.equal(await p.evaluate(()=>state.money),560);assert.equal(await p.evaluate(()=>state.kits),0);assert.equal(await p.evaluate(()=>state.groupSales),0);
+await p.evaluate(()=>{state.level=2;Object.assign(state.moments,{active:null,request:null,offer:null,interest:null,sequence:1,cooldown:0});ShopMoments.tick(.1)});
+await p.locator('[data-moment="offer"]').click();assert.equal(await p.evaluate(()=>quote('food',5,'local').cost),80);assert.equal(await p.evaluate(()=>quote('food',5,'wholesale').cost),85);
+await p.screenshot({path:__dirname+'/v07-offer-mobile.png',fullPage:true});
+await p.locator('[data-moment="buy"]').click();assert.equal(await p.evaluate(()=>state.money),480);assert.equal(await p.evaluate(()=>state.delivery.q),5);assert.equal(await p.evaluate(()=>state.moments.offer),null);
+await p.clock.runFor(31000);assert.equal(await p.evaluate(()=>state.delivery),null);
+await p.evaluate(()=>{Object.assign(state.moments,{active:null,request:null,offer:null,interest:null,sequence:1,cooldown:0});ShopMoments.tick(.1)});await p.locator('[data-moment="offer"]').click();await p.evaluate(()=>ShopMoments.tick(91));assert.equal(await p.evaluate(()=>quote('food',5,'local').cost),100);
+await p.evaluate(()=>{Object.assign(state.moments,{active:null,request:null,offer:null,interest:null,sequence:2,cooldown:0});ShopMoments.tick(.1)});await p.locator('[data-moment="betta"]').click();assert.equal(await p.evaluate(()=>ShopMoments.interest()),'betta');await p.locator('[data-moment="quiet"]').click();assert.equal(await p.locator('#momentBar').isVisible(),false);assert.equal(await p.evaluate(()=>ShopMoments.interest()),'betta');
+await p.evaluate(()=>{Object.assign(state.moments,{active:null,request:null,offer:null,interest:null,sequence:0,cooldown:0});ShopMoments.tick(.1)});await p.locator('[data-moment="skip"]').click();assert.equal(await p.evaluate(()=>state.moments.request),null);await p.evaluate(()=>ShopMoments.tick(100));assert.equal(await p.evaluate(()=>state.moments.active),null,'events have a cooldown');
+await p.evaluate(()=>{state.level=4;state.kitRequested=true;state.stock=Object.fromEntries(Object.keys(products).map(k=>[k,ShopDesign.kit[k]||0]));state.stock.betta=3;state.moments.request={id:'coexist',product:'betta',basket:{betta:2},remaining:100,claimed:false};});
+assert.equal(await p.evaluate(()=>sellBasket({betta:1})),null);assert.ok(await p.evaluate(()=>sellBasket(ShopDesign.kit)));assert.equal(await p.evaluate(()=>state.stock.betta),2);assert.ok(await p.evaluate(()=>sellBasket({betta:2},{requestId:'coexist'})));assert.equal(await p.evaluate(()=>state.moments.request),null);assert.equal(await p.evaluate(()=>sellBasket({betta:2},{requestId:'coexist'})),null);
+assert.deepEqual(errors,[]);console.log('PASS: non-modal requests, reservation, reload, real pickup/payment, no kit/group leakage, one-use local discount, expiry, stock decision, cooldown, kit coexistence and no duplicate claims.');
+}finally{await b.close()}})().catch(e=>{console.error(e);process.exitCode=1});
