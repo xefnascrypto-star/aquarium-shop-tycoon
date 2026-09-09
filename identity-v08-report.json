@@ -11,9 +11,9 @@
     "to-product",
     "browsing",
     "to-queue",
+    "to-counter",
     "checkout",
     "leaving",
-    "to-counter",
     "turning"
   ],
   "bag": true,

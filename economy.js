@@ -1,6 +1,6 @@
 const products=ShopDesign.products;
 const $=id=>document.getElementById(id),fmt=n=>Math.floor(n).toLocaleString('es-ES');
-const initial=()=>({schema:6,identity:null,money:500,level:1,xp:0,served:0,capacity:20,pearls:0,stock:Object.fromEntries(Object.keys(products).map(k=>[k,({betta:5,comet:6,food:4,conditioner:3})[k]||0])),lastSeen:Date.now(),delivery:null,restocked:0,supplier:'local',supplierReceived:{local:0,wholesale:0},sold:{},placementRewarded:{},lost:0,potential:0,kits:0,kitRequested:false,groupSales:0,wageElapsed:0,wagesPaid:0,employee:null,speed:4,debt:0,investment:null});
+const initial=()=>({schema:6,identity:null,money:500,level:1,xp:0,served:0,capacity:20,pearls:0,stock:Object.fromEntries(Object.keys(products).map(k=>[k,({betta:5,comet:6,food:4,conditioner:3})[k]||0])),lastSeen:Date.now(),ordersVersion:1,orders:[],orderSerial:0,restocked:0,supplier:'local',supplierReceived:{local:0,wholesale:0},sold:{},placementRewarded:{},lost:0,potential:0,kits:0,kitRequested:false,groupSales:0,wageElapsed:0,wagesPaid:0,employee:null,speed:4,debt:0,investment:null});
 let state=initial(),resetting=false;
 function unlocked(k){const p=products[k];return !!p&&state.level>=p.level&&(!p.investment||state[p.investment])}
 function used(){return Object.entries(state.stock).reduce((a,[k,v])=>a+v*(products[k]?.vol||0),0)}
@@ -37,19 +37,37 @@ window.dispatchEvent(new CustomEvent('sale',{detail:amount}));log((isKit?'Acuari
 return {key:entries[0][0],name:isKit?'Acuario completo':products[entries[0][0]].name,amount,basket};
 }
 function customer(k,strict=false){const keys=Object.keys(products).filter(k=>unlocked(k)&&state.stock[k]>0);return sellBasket({[keys.includes(k)?k:strict?k:keys[Math.floor(Math.random()*keys.length)]]:1})}
-function quote(k,q,supplier=state.supplier){const p=products[k],bulk=supplier==='wholesale';return {cost:p?Math.ceil(p.buy*(bulk?.85:1)*(window.ShopMoments?.discount(k,supplier)||1))*q:0,seconds:bulk?90:30,minimum:bulk?10:1}}
-function order(k,q){
-if(!unlocked(k)||![1,5,10,20].includes(q))return log('Pedido no disponible','warn');
-if(state.level<2)return log('El proveedor llega en el nivel 2. Tienes stock gratuito para empezar.','warn');
-if(state.delivery)return log('Ya hay una entrega en camino','warn');
-if(state.supplier==='wholesale'&&state.level<7)return;
-const offer=quote(k,q);
-if(q<offer.minimum)return log('El mayorista pide al menos 10 unidades.','warn');
-if(state.money<offer.cost)return log('No tienes suficientes monedas','warn');
-if(used()+products[k].vol*q>state.capacity)return log('No cabe en el almacén. Reduce la cantidad.','warn');
-state.money-=offer.cost;window.ShopMoments?.purchased(k,state.supplier);state.delivery={k,q,remaining:offer.seconds*1000,end:Date.now()+offer.seconds*1000,supplier:state.supplier};log('Pedido de '+q+' '+products[k].name+' · '+offer.seconds+' s');render();saveGame(false);
+function incomingOrders(){return ShopOrders.active(state.orders)}
+function reservedSpace(){return ShopOrders.reserved(state.orders,products)}
+function quote(k,q,supplier=state.supplier){return ShopOrders.quote(products,k,q,supplier,window.ShopMoments?.discount(k,supplier)||1)}
+function orderReason(k,q,supplier=state.supplier){
+ const t=(key,params)=>ShopI18n.t(key,params),offer=quote(k,q,supplier);
+ if(!unlocked(k)||![1,5,10,20].includes(q)||!offer)return t('orderUnavailable');
+ if(state.level<offer.level)return t('orderSupplierLevel',{level:offer.level});
+ if(q<offer.minimum)return t('orderMinimum',{quantity:offer.minimum});
+ if(state.money<offer.cost)return t('orderNoMoney');
+ const volume=ShopOrders.space(products,k,q);
+ if(volume>0&&used()+reservedSpace()+volume>state.capacity)return t('orderNoSpace');
+ return '';
 }
-function deliveryTick(dt){if(!state.delivery)return;state.delivery.remaining-=dt*1000;state.delivery.end=Date.now()+state.delivery.remaining;if(state.delivery.remaining<=0){const d=state.delivery;state.stock[d.k]=(state.stock[d.k]||0)+d.q;state.delivery=null;state.restocked++;state.supplierReceived[d.supplier]=(state.supplierReceived[d.supplier]||0)+1;state.xp+=20;log('Mercancía recibida: '+d.q+' '+products[d.k].name,'good');window.dispatchEvent(new Event('deliveryreceived'));recalcLevel();render();saveGame(false)}}
+function order(k,q){
+ const reason=orderReason(k,q);if(reason)return log(reason,'warn');
+ const offer=quote(k,q),now=Date.now();
+ const d={id:'order-'+(++state.orderSerial),k,q,cost:offer.cost,supplier:state.supplier,orderedAt:now,duration:offer.seconds*1000,remaining:offer.seconds*1000,status:'in_transit',deliveredAt:null};
+ state.money-=d.cost;state.orders.push(d);window.ShopMoments?.purchased(k,d.supplier);
+ log(ShopI18n.t('orderPlaced',{quantity:q,product:products[k].name,seconds:offer.seconds}));render();saveGame(false);return d.id;
+}
+function deliveryTick(dt){
+ const arrived=ShopOrders.advance(state.orders,dt,Date.now());if(!arrived.length)return;
+ for(const d of arrived){
+ state.stock[d.k]=(state.stock[d.k]||0)+d.q;state.restocked++;state.supplierReceived[d.supplier]=(state.supplierReceived[d.supplier]||0)+1;state.xp+=20;
+ log(ShopI18n.t('orderArrived',{quantity:d.q,product:products[d.k].name}),'good',false);
+ }
+ state.orders=ShopOrders.compact(state.orders);
+ for(const d of arrived)window.dispatchEvent(new CustomEvent('deliveryreceived',{detail:{...d}}));
+ window.dispatchEvent(new CustomEvent('notice',{detail:arrived.length===1?ShopI18n.t('orderArrived',{quantity:arrived[0].q,product:products[arrived[0].k].name}):ShopI18n.t('ordersArrived',{count:arrived.length})}));
+ recalcLevel();render();saveGame(false);
+}
 function upgradeReason(k){const u=ShopDesign.upgrades[k];if(!u)return 'Mejora desconocida';if(state[k])return 'Comprado';if(state.level<u.level)return 'Nivel '+u.level;if(['tank4','tank5','shelf2'].includes(k)&&!state.expansion)return 'Amplía la tienda';if(k==='expansion'&&(state.served<25||state.kits<1))return '25 ventas y un acuario completo';if(k==='warehouse2'&&!state.warehouse)return 'Requiere Almacén I';if(state.money<u.cost)return 'Faltan '+fmt(u.cost-state.money)+' monedas';return ''}
 function buyUpgrade(k){
 const reason=upgradeReason(k);if(reason)return log(reason,'warn');const u=ShopDesign.upgrades[k];
@@ -63,14 +81,14 @@ if(u.kind)shopEditor.begin(state.layout.objects.find(o=>o.kind===u.kind).id);
 }
 function upgradeShelf(){buyUpgrade('shelf')}function upgradeTank(){buyUpgrade('tank3')}function upgradeWarehouse(){buyUpgrade('warehouse')}
 function hire(id){if(state.level<9||state.employee||!ShopDesign.employees[id])return;if(state.money<1500)return log('Necesitas 1.500 monedas','warn');state.money-=1500;state.employee=id;state.wageElapsed=0;state.xp+=30;log(ShopDesign.employees[id].name+' se incorpora al equipo','good');recalcLevel();render();saveGame(false)}
-function rescue(){if(state.delivery||state.debt||state.money>=15||Object.entries(state.stock).some(([k,q])=>unlocked(k)&&q>0))return;state.stock.comet=1;state.debt=15;log('El proveedor te adelanta un Cometa. Devolverás 15 monedas al venderlo.');render();saveGame(false)}
+function rescue(){if(incomingOrders().length||state.debt||state.money>=15||Object.entries(state.stock).some(([k,q])=>unlocked(k)&&q>0))return;state.stock.comet=1;state.debt=15;log('El proveedor te adelanta un Cometa. Devolverás 15 monedas al venderlo.');render();saveGame(false)}
 function saveGame(show=true){if(resetting||!state.identity)return;state.lastSeen=Date.now();try{localStorage.setItem('aquariumShopV01',JSON.stringify(state))}catch(e){if(show)log('No se ha podido guardar','warn');return}if(show)log('Partida guardada','good')}
 function load(){try{const raw=localStorage.getItem('aquariumShopV01');if(!raw)return;const old=JSON.parse(raw);state={...initial(),...old,stock:{...initial().stock,...old.stock},sold:old.sold||{},supplierReceived:{local:0,wholesale:0,...old.supplierReceived}};
 state.identity=ShopIdentity.normalize(old.identity);
 if(old.schema!==6){state.schema=6;state.xp=Math.max(0,state.served*10);state.shelf=true;state.speed=1;state.supplierReceived.local=old.restocked||0;state.stock.conditioner=3}
 state.level=Math.max(1,Math.min(10,Math.floor(state.level)||1));state.money=Math.max(0,Number(state.money)||0);state.speed=[1,4,12].includes(state.speed)?state.speed:1;
 for(const k of Object.keys(products))state.stock[k]=Math.max(0,Math.floor(Number(state.stock[k])||0));
-if(state.delivery){state.delivery.remaining=state.delivery.remaining??Math.max(0,state.delivery.end-Date.now());state.delivery.supplier=state.delivery.supplier||'local'}
+Object.assign(state,ShopOrders.migrate(old,products,Date.now()));delete state.delivery;if(!Object.hasOwn(ShopOrders.providers,state.supplier))state.supplier='local';
 }catch(e){state=initial()}}
 function resetGame(){if(confirm('¿Empezar una partida nueva? Se borrará el progreso de este navegador.')){resetting=true;localStorage.removeItem('aquariumShopV01');location.reload()}}
 load();if(state.identity)ShopIdentity.set(state.identity);render();

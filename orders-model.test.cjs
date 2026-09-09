@@ -1,0 +1,14 @@
+const assert=require('node:assert/strict'),O=require('./supplier-orders.js'),D=require('./design.js');
+const catalog=D.products,now=1788980000000;
+assert.equal(O.quote(catalog,'betta',5,'local').cost,125);assert.equal(O.quote(catalog,'neon',10,'wholesale').cost,110);
+assert.equal(O.quote(catalog,'food',1,'unknown'),null);assert.equal(O.quote(catalog,'food',1,'constructor'),null);assert.equal(O.migrate({delivery:{k:'food',q:1,supplier:'constructor',remaining:3000}},catalog,now).orders[0].supplier,'local');
+O.providers.local.productRules.guppy={seconds:45};O.providers.local.productRules.filter={seconds:60};
+const orders=['betta','food','guppy','filter'].map((k,i)=>({id:'order-'+(i+1),k,q:1,...O.quote(catalog,k,1,'local'),duration:O.quote(catalog,k,1,'local').seconds*1000,remaining:O.quote(catalog,k,1,'local').seconds*1000,status:'in_transit',deliveredAt:null,orderedAt:now,supplier:'local'}));
+assert.equal(O.reserved(orders,catalog),3);
+assert.deepEqual(O.advance(orders,30,now+30000).map(o=>o.k),['betta','food']);assert.deepEqual(orders.map(o=>o.remaining),[0,0,15000,30000]);assert.equal(O.reserved(orders,catalog),2);
+assert.deepEqual(O.advance(orders,15,now+45000).map(o=>o.k),['guppy']);assert.deepEqual(O.advance(orders,15,now+60000).map(o=>o.k),['filter']);assert.equal(O.advance(orders,100,now+160000).length,0);
+const many=Array.from({length:200},(_,i)=>({...orders[0],id:'order-'+i,status:'in_transit',remaining:1000}));assert.equal(O.compact(many).length,200);
+const saved=O.migrate({orders,orderSerial:4},catalog,now+86400000);assert.deepEqual(saved.orders,orders.map(({seconds,minimum,level,...o})=>o));
+const legacy=O.migrate({delivery:{k:'food',q:5,remaining:17000,end:now+17000,supplier:'local'},lastSeen:now},catalog,now+86400000);assert.equal(legacy.orders[0].remaining,17000);assert.equal(legacy.orders[0].cost,null);assert.equal(legacy.orders[0].status,'in_transit');
+assert.equal(O.migrate({orders:[],delivery:{k:'food',q:5}},catalog,now).orders.length,0);
+console.log('PASS: concurrent 30/30/45/60 clocks, independent completion, reserved volume, provider pricing, no active-order cap, round-trip and legacy migration.');

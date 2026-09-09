@@ -15,11 +15,15 @@ $('levelProgress').textContent=state.level===10?'Primera gran decisión':state.x
 updateShopStatus();
 }
 function updateShopStatus(){
-const d=state.delivery,status=$('shopStatus');let message='';
-if(d)message='▤ '+d.q+' × '+products[d.k].name+' · '+Math.max(0,Math.ceil(d.remaining/1000))+' s de juego';
+const orders=incomingOrders(),next=orders.reduce((best,o)=>!best||o.remaining<best.remaining?o:best,null),status=$('shopStatus'),t=(key,params)=>ShopI18n.t(key,params);let message='';
+if(next)message='▤ '+t('ordersSummary',{count:orders.length,seconds:Math.ceil(next.remaining/1000)});
 else {const empty=Object.keys(products).filter(k=>unlocked(k)&&state.stock[k]===0);if(empty.length)message='Reponer '+empty.length+' productos'+(state.level>=8?' · '+state.lost+' compras perdidas':'')}
-status.hidden=!message;status.textContent=message;$('delivery').textContent=d?message:'';
-if($('deliveryArt')){$('deliveryArt').innerHTML=d?'<g transform="translate(800 353)">'+box(0,-28,29,23,28)+'<text x="0" y="-40" text-anchor="middle" fill="#447561" font-size="15">▤ '+Math.max(0,Math.ceil(d.remaining/1000))+' s</text></g>':''}
+status.hidden=!message;status.textContent=message;
+$('incomingTitle').textContent=t('ordersTitle');
+$('orderCapacity').textContent=t('ordersCapacity',{used:used(),reserved:reservedSpace(),free:Math.max(0,state.capacity-used()-reservedSpace()),capacity:state.capacity});
+const html=orders.length?orders.map(o=>'<article class="incoming-order" data-order-id="'+o.id+'"><div><b>'+o.q+' × '+products[o.k].name+'</b><small>'+t('supplier_'+o.supplier)+' · '+t('orderInTransit')+'</small><small>'+t('orderCost',{cost:o.cost===null?'—':fmt(o.cost)})+'</small></div><span class="order-timer">'+t('orderSeconds',{seconds:Math.ceil(o.remaining/1000)})+'</span></article>').join(''):'<p class="orders-empty">'+t('ordersEmpty')+'</p>';
+if($('delivery').dataset.content!==html){$('delivery').innerHTML=html;$('delivery').dataset.content=html}
+if($('deliveryArt')){$('deliveryArt').innerHTML=next?'<g transform="translate(800 353)">'+box(0,-28,29,23,28)+'<text x="0" y="-40" text-anchor="middle" fill="#447561" font-size="15">▤ '+orders.length+' · '+Math.ceil(next.remaining/1000)+' s</text></g>':''}
 }
 $('goalAction').onclick=()=>{if(currentMilestone?.action==='place')shopEditor.begin(currentMilestone.id);else showPanel('journey')};
 $('journeyAction').onclick=()=>{if(currentMilestone?.action==='place')shopEditor.begin(currentMilestone.id);else if(currentMilestone?.action)showPanel(currentMilestone.action);else panel.close()};

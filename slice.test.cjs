@@ -9,8 +9,8 @@ assert.equal(await page.locator('#money').textContent(),'500');
 await page.locator('[data-panel="settings"]').click();await page.locator('#gameSpeed').selectOption('12');await page.locator('#closePanel').click();
 let previous=0,pendingTested=false,full=false;const report=[];
 for(let step=0;step<2000;step++){
- const info=await page.evaluate(()=>({level:state.level,money:state.money,served:state.served,xp:state.xp,kits:state.kits,employee:state.employee,wages:state.wagesPaid,stock:{...state.stock},delivery:state.delivery,pending:shopEditor.pending().map(o=>o.id),needs:requirements(state.level+1),layout:state.layout}));
- if(info.level!==previous){levels.push(info.level);report.push({step,level:info.level,money:info.level===10?(await page.evaluate(()=>window.tenArrival.money)):info.money,sampledMoney:info.money,served:info.served,xp:info.xp});console.log('LEVEL',JSON.stringify(report.at(-1)));previous=info.level;await page.screenshot({path:__dirname+'/v08-level-'+info.level+'.png',fullPage:true})}
+ const info=await page.evaluate(()=>({level:state.level,money:state.money,served:state.served,xp:state.xp,kits:state.kits,employee:state.employee,wages:state.wagesPaid,stock:{...state.stock},delivery:incomingOrders()[0]||null,pending:shopEditor.pending().map(o=>o.id),needs:requirements(state.level+1),layout:state.layout}));
+ if(info.level!==previous){levels.push(info.level);report.push({step,level:info.level,money:info.level===10?(await page.evaluate(()=>window.tenArrival.money)):info.money,sampledMoney:info.money,served:info.served,xp:info.xp});console.log('LEVEL',JSON.stringify(report.at(-1)));previous=info.level;await page.screenshot({path:__dirname+'/v081-level-'+info.level+'.png',fullPage:true})}
  if(info.level===10){const at=await page.evaluate(()=>window.tenArrival);assert.ok(at&&at.money>=12000&&at.money<17000,'reserve at actual level-up');full=true;if(info.money>=12000)break;await page.clock.runFor(1000);continue}
  if(info.pending.length){
   const id=info.pending[0];await page.evaluate(id=>shopEditor.begin(id),id);
@@ -26,7 +26,7 @@ for(let step=0;step<2000;step++){
  if(needed){buyUpgrade(needed);return 'upgrade '+needed}
  if(state.level>=9&&!state.employee&&state.money>=1500){hire('eva');return 'hire'}
  if(state.level>=4&&!state.kits&&!state.kitRequested){$('kitAccept').click();return 'kit'}
- if(state.level<2||state.delivery)return '';
+ if(state.level<2||incomingOrders().length)return '';
  // Reserve the kit, keep a modest range stocked, and compare suppliers when introduced.
  let keys=Object.keys(products).filter(k=>unlocked(k)&&(!products[k].investment));
  if(state.level===3&&!((state.sold.guppy||0)+(state.sold.platy||0)))keys=keys.sort((a,b)=>(b==='guppy')-(a==='guppy'));
@@ -56,7 +56,7 @@ await page.locator('#editSuggest').click();assert.equal(await page.locator('#edi
 const final=await page.evaluate(()=>{saveGame(false);return JSON.parse(JSON.stringify(state))});await page.reload();
 assert.deepEqual(await page.evaluate(()=>state.layout),final.layout);assert.equal(await page.evaluate(()=>state.money),final.money);assert.equal(await page.evaluate(()=>state.investment),'plants');
 assert.equal(await page.evaluate(()=>state.professional||false),false);assert.equal(await page.evaluate(()=>state.warehouse2||false),false);
-for(const width of [320,390,768,1280]){await page.setViewportSize({width,height:960});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);await page.screenshot({path:__dirname+'/v08-finished-'+width+'.png',fullPage:true})}
-assert.deepEqual(errors,[]);fs.writeFileSync(__dirname+'/playthrough-v08.json',JSON.stringify({levels:report,final:{money:final.money,served:final.served,level:final.level,xp:final.xp,pearls:final.pearls,kits:final.kits,groupSales:final.groupSales,employee:final.employee,wages:final.wagesPaid,lost:final.lost,investment:final.investment},checks:'Physical paths, pending cancel/reload, placement confirmation, all ten levels without money/XP cheats, suppliers, kit, groups, wages, first investment, persistence, responsive. PASS'},null,2));
+for(const width of [320,390,768,1280]){await page.setViewportSize({width,height:960});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);await page.screenshot({path:__dirname+'/v081-finished-'+width+'.png',fullPage:true})}
+assert.deepEqual(errors,[]);fs.writeFileSync(__dirname+'/playthrough-v081.json',JSON.stringify({levels:report,final:{money:final.money,served:final.served,level:final.level,xp:final.xp,pearls:final.pearls,kits:final.kits,groupSales:final.groupSales,employee:final.employee,wages:final.wagesPaid,lost:final.lost,investment:final.investment},checks:'Physical paths, pending cancel/reload, placement confirmation, all ten levels without money/XP cheats, suppliers, kit, groups, wages, first investment, persistence, responsive. PASS'},null,2));
 console.log('PASS: complete new game 1–10 through actual customers, orders, editor, expansion, kit, groups, suppliers, employee, wages and one investment.');
 }finally{await browser.close()}})().catch(e=>{console.error(e);process.exitCode=1});

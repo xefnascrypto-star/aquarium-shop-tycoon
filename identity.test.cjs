@@ -25,10 +25,10 @@ await p.evaluate(()=>saveGame(false));const preserved=await p.evaluate(()=>({ide
 assert.deepEqual(await p.evaluate(()=>({identity:state.identity,layout:state.layout,money:state.money,stock:state.stock,level:state.level})),preserved);
 for(const width of [320,390,768,1280]){await p.setViewportSize({width,height:844});assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);await p.screenshot({path:__dirname+'/v08-shop-'+width+'.png',fullPage:true})}
 // Legacy identity migration leaves every existing business field untouched.
-await p.evaluate(()=>{const old=JSON.parse(localStorage.getItem('aquariumShopV01'));resetting=true;delete old.identity;old.money=4321;old.level=7;old.employee='eva';old.delivery={k:'food',q:5,remaining:12000,supplier:'local'};localStorage.setItem('aquariumShopV01',JSON.stringify(old));window.legacy=old});
+await p.evaluate(()=>{const old=JSON.parse(localStorage.getItem('aquariumShopV01'));resetting=true;delete old.identity;delete old.orders;delete old.orderSerial;delete old.ordersVersion;old.money=4321;old.level=7;old.employee='eva';old.delivery={k:'food',q:5,remaining:12000,supplier:'local'};localStorage.setItem('aquariumShopV01',JSON.stringify(old));window.legacy=old});
 const old=await p.evaluate(()=>window.legacy);await p.reload();
-const migrated=await p.evaluate(()=>state);for(const key of ['money','level','employee','delivery','stock','layout','served','xp'])assert.deepEqual(migrated[key],old[key],key);
-assert.equal(await p.locator('#shopCreation').count(),0);assert.ok(migrated.identity.name);
+const migrated=await p.evaluate(()=>state);for(const key of ['money','level','employee','stock','layout','served','xp'])assert.deepEqual(migrated[key],old[key],key);
+assert.equal(await p.locator('#shopCreation').count(),0);assert.ok(migrated.identity.name);assert.equal(migrated.orders[0].remaining,old.delivery.remaining);assert.equal(migrated.orders[0].k,old.delivery.k);
 await p.evaluate(()=>{state.identity=ShopIdentity.normalize({name:'WWWWWWWWWWWWWWWWWWWWWWWWWWWW'});render()});assert.ok(await p.locator('#shopSign text').first().evaluate(n=>n.getComputedTextLength()<=122.01));
 // User-supplied text remains inert in every logo/surface.
 await p.evaluate(()=>{state.identity=ShopIdentity.normalize({name:'<img src=x onerror=alert(1)>',icon:'initials',color:'url(bad)',shape:'evil'});render();saveGame(false)});

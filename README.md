@@ -1,4 +1,4 @@
-# Aquarium Shop Tycoon · v0.8
+# Aquarium Shop Tycoon · v0.8.1
 Demo cozy/isométrica de niveles 1–10. Jugar: https://xefnascrypto-star.github.io/aquarium-shop-tycoon/
 
 ## Recorrido jugable
@@ -62,3 +62,11 @@ Los nuevos textos de identidad y los bocadillos usan un diccionario español/ing
 No se añaden niveles, sistemas económicos, SDK publicitarios ni anuncios reales.
 
 Pruebas adicionales: identity.test.cjs comprueba creación, pausa, idioma, guardado/recarga, migración, personalización/cancelación, nombres tratados como texto, reinicio y compra con bolsa. visual-v08.test.cjs genera vistas del local abastecido y una lámina de revisión de peces/personajes. identity-v08-report.json y polish-v08-report.json recogen las comprobaciones. Las capturas locales no son recursos de producción.
+
+## Pedidos simultáneos v0.8.1
+El proveedor permite realizar tantos pedidos simultáneos como permitan el dinero, la disponibilidad y el almacén. Cada pedido se paga al solicitarlo y conserva su propio temporizador; no existe una cola de entregas.
+Se mantienen precios, descuentos, mínimos, cantidades seleccionables y plazos: local 30 segundos de juego, mayorista 90. Los ejemplos de 45/60 segundos se prueban como reglas futuras, sin introducir esos cambios de balance.
+«Pedidos en camino» muestra producto, cantidad, proveedor, coste pagado y tiempo restante. Cada entrega actualiza stock e hitos una sola vez; las llegadas simultáneas se agrupan en un aviso discreto y cada pedido queda registrado en Actividad.
+El espacio disponible es capacidad menos stock recibido menos volumen reservado por todos los pedidos en tránsito. Recibir mercancía transforma reserva en stock; no libera espacio ficticio. Los peces siguen teniendo volumen de almacén cero, porque v0.8 no tiene todavía otro límite de stock vivo.
+Se guarda cada pedido con ID, producto, cantidad, coste, proveedor, instante de solicitud, duración, tiempo restante, estado e instante efectivo de entrega. El tiempo de juego permanece pausado al cerrar u ocultar la página. Un pedido único de v0.8 se migra sin cobrar otra vez y conserva su tiempo restante; si no guardaba coste, se muestra como desconocido.
+orders-model.test.cjs comprueba temporizadores 30/30/45/60, reglas por producto, reserva y ausencia de límite de pedidos activos. orders.test.cjs comprueba seis pedidos desde la interfaz, bloqueo por capacidad, proveedores con plazos distintos, recarga, reapertura al día siguiente, migración y ausencia de doble entrega. orders-v081-report.json y playthrough-v081.json recogen las pruebas de esta actualización.

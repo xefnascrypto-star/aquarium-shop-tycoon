@@ -1,10 +1,10 @@
 {
   "name": "aquarium-shop-tycoon",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "private": true,
   "scripts": {
     "preview": "node preview.cjs",
-    "test": "node identity.test.cjs && node visual-v08.test.cjs && node model.test.cjs && node polish-model.test.cjs && node polish.test.cjs && node moments.test.cjs && node safeguards.test.cjs && node slice.test.cjs"
+    "test": "node orders-model.test.cjs && node orders.test.cjs && node identity.test.cjs && node visual-v08.test.cjs && node model.test.cjs && node polish-model.test.cjs && node polish.test.cjs && node moments.test.cjs && node safeguards.test.cjs && node slice.test.cjs"
   },
   "devDependencies": {
     "playwright": "1.62.1"

@@ -1,0 +1,13 @@
+{
+  "simultaneousOrders": 6,
+  "localSeconds": 30,
+  "wholesaleSeconds": 90,
+  "reservedCapacity": 20,
+  "staggeredDeliveries": true,
+  "reload": true,
+  "closedAndRestoredNextDay": true,
+  "legacyMigration": true,
+  "noDoubleCredit": true,
+  "localization": true,
+  "errors": []
+}
