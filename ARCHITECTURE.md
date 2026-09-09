@@ -1,4 +1,4 @@
-# Arquitectura v0.7
+# Arquitectura v0.8
 design.js centraliza productos, precios, perfiles y definiciones de niveles 1–10. requirements combina XP, ventas e hitos; recalcLevel sólo avanza. placementRewarded impide obtener XP repetidamente con Deshacer.
 
 layout-model.js separa catálogo e instancias (id, kind, roomId, x, y, rotation, placed). purchased representa propiedad; owned sólo incluye objetos colocados. Migración acepta layouts 1, 2 y 3, conserva posiciones válidas y deja pendientes los muebles que no caben. La geometría deriva de expansion, no de dimensiones arbitrarias guardadas.
@@ -22,3 +22,10 @@ characters.create/update/remove reciben pies, dirección, fase, distancia recorr
 moments.js usa tiempo de juego y un único evento opcional. Hay pausa entre oportunidades y se generan sólo en niveles 1–4. No abre diálogos automáticamente.
 Un encargo reserva unidades mediante reserved(k, exceptId); sellBasket respeta simultáneamente esa reserva y la del conjunto completo. La reclamación se reinicia al editar o recargar; el cobro valida su ID y sólo puede completarse una vez. Una visita fallida vuelve a intentarse después de una espera; si no se prepara el stock, el encargo caduca sin penalización.
 quote aplica una oferta únicamente al producto y proveedor local previstos; se consume después de superar todas las validaciones de order. La recomendación cambia una parte de la demanda, no los precios ni las estadísticas de satisfacción.
+
+## Identidad y presentación v0.8
+identity.js define state.identity = { version: 1, name, color, icon, shape, locale }. Su versión es independiente del esquema económico 6 y del layout 3 para evitar repetir migraciones económicas. normalize valida opciones de catálogo, limita el nombre y elimina caracteres de control; mark escapa contenido antes de generar SVG. El mismo valor y adaptador pueden alimentar futuras señales, vehículos o embalajes sin añadirlos a esta versión.
+identity-ui.js crea una identidad antes de la primera llegada. El reloj y el guardado automático no avanzan sin identidad. Las partidas existentes sin ella reciben un valor por defecto sin sustituir dinero, stock, empleados, pedidos ni distribución. Personalizar desde Ajustes pausa los relojes, edita un borrador y permite cancelar; el guardado contiene siempre la identidad confirmada.
+i18n.js contiene las claves nuevas en es/en y sustituciones de parámetros. El selector describe su alcance: identidad y bocadillos; la interfaz anterior de gestión conserva sus cadenas españolas.
+fish-art.js contiene catálogo visual, siluetas y composición por expositor. paint sólo reconstruye el grupo de peces cuando cambia el conjunto de especies con stock. La animación es visual y respeta movimiento reducido; no escribe cantidades, rutas ni ventas.
+characters.js mantiene create/update/remove. profile combina módulos visuales con una semilla de apariencia independiente de Math.random de la economía. Los pies y colisiones permanecen bajo visitors/motion; piernas, cabeza, brazos y bolsa sólo alteran el dibujo. La bolsa depende del resultado de una compra confirmada, no de haber llegado al mostrador.

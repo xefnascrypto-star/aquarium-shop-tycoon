@@ -12,6 +12,7 @@ for(const k of Object.keys(basket)){const p=N.plan(graph,k,'main',start);if(!p)r
 return {stops,counterId};
 }
 function spawn(){
+if(!state.identity)return;
 const g=graph.grids.main;if(!N.free(g,g.entrance))return;
 let basket,kit=false,specific=false,request=window.ShopMoments?.claim();
 if(request){basket=request.basket;specific=true}
@@ -85,14 +86,15 @@ a.result=sellBasket(a.basket,{requestId:a.requestId});a.server=null;if(a.result)
 function draw(){
 for(const a of actors){
  const feet=M.project(grid(a).room,a.position.x,a.position.y);
- const bubble=({entering:a.requestId?'Mi encargo':a.kit?'Mi acuario':a.specific?'Busco '+products[a.product]?.name:'¡Hola!','to-product':a.specific?'Busco '+products[a.product]?.name:'Voy a mirar',browsing:a.kit?'El conjunto':products[a.product]?.name,'to-queue':state.level>=9?'A la cola':'A la caja',queue:state.level>=9?'Mi turno…':'Voy a pagar','to-counter':'¡Me toca!',checkout:'En caja',leaving:a.result?'¡Gracias!':'Hasta luego',turning:'Otra vez será',waiting:'Sin paso'})[a.phase]||'';
+ const t=(key,params)=>ShopI18n.t(key,params),bubble=({entering:a.requestId?t('order'):a.kit?t('aquarium'):a.specific?t('seeking',{name:products[a.product]?.name}):t('hello'),'to-product':a.specific?t('seeking',{name:products[a.product]?.name}):t('look'),browsing:a.kit?t('set'):products[a.product]?.name,'to-queue':t(state.level>=9?'queue':'till'),queue:t(state.level>=9?'turn':'pay'),'to-counter':t('myTurn'),checkout:t('checkout'),leaving:t(a.result?'thanks':'bye'),turning:t('later'),waiting:t('blocked')})[a.phase]||'';
  Characters.update(a.node,{feet,phase:a.phase,moving:!!a.path,distance:a.distance,facing:a.facing,bubble,label:a.name+': '+status(a),result:a.result?'sale':a.lost?'empty':'pending'});
 }
+document.querySelectorAll('.shop-clerk').forEach((node,index)=>node.classList.toggle('serving',actors.some(a=>a.phase==='checkout'&&a.server?.id===index)));
 const layer=$('furnitureLayer'),items=[...layer.querySelectorAll(':scope > [data-instance]')].map(node=>{const o=state.layout.objects.find(o=>o.id===node.dataset.instance);return {node,bounds:M.footprint(o)}});
 items.push(...actors.map(a=>({node:a.node,bounds:{x:a.position.x-.28,y:a.position.y-.28,width:.56,depth:.56}})));
 for(const item of ShopDepth.sort(items))layer.append(item.node);details();
 }
-function tick(){const now=Date.now();let dt=Math.min(.1,Math.max(0,(now-lastFrame)/1000))*state.speed;lastFrame=now;if(paused||document.hidden)return;refresh();
+function tick(){const now=Date.now();let dt=Math.min(.1,Math.max(0,(now-lastFrame)/1000))*state.speed;lastFrame=now;if(paused||document.hidden||!state.identity||ShopIdentity.editing)return;refresh();
 while(dt>0){const step=Math.min(.05,dt);dt-=step;for(const a of [...actors])advance(a,step);schedule();arrival-=step;if(arrival<=0&&actors.length<(state.level>=9?7:3)){spawn();arrival=state.level>=9?3:8}}
 draw();
 }
@@ -100,6 +102,7 @@ $('visitorStock').onclick=()=>showPanel('stock');
 window.shopCirculation={occupied(){return actors.flatMap(a=>[a.cell,...(a.path?.slice(0,2)||[])].map(c=>({...c,roomId:a.roomId})))},snapshot(){return actors.map(a=>({id:a.id,phase:a.phase,distance:a.distance,interaction:!!a.objectId&&N.services(grid(a),object(a,a.objectId)||{kind:'plant',x:-99,y:-99,rotation:0}).some(c=>N.key(c)===N.key(a.cell)),cell:{...a.cell},position:{...a.position},product:a.product,objectId:a.objectId,counterId:a.counterId,result:a.result,basket:{...a.basket},requestId:a.requestId,specific:a.specific,kit:a.kit,server:a.server?.id,path:a.path?.map(c=>({...c}))||[],roomId:a.roomId}))}};
 window.addEventListener('editbegin',()=>{paused=true;for(const a of actors)Characters.remove(a.node);actors.length=0;selected=null});
 window.addEventListener('editend',()=>{paused=false;lastFrame=Date.now();arrival=8;refresh();spawn();draw()});
+window.addEventListener('shopstarted',()=>{lastFrame=Date.now();arrival=8;spawn();draw()});
 window.addEventListener('layoutchange',refresh);window.addEventListener('statechange',refresh);
 document.addEventListener('visibilitychange',()=>lastFrame=Date.now());
 refresh();spawn();draw();arrival=8;function frame(){tick();requestAnimationFrame(frame)}requestAnimationFrame(frame);

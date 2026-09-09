@@ -34,7 +34,7 @@ $('productFilter').onchange=()=>syncScene();
 document.querySelectorAll('[data-supplier]').forEach(b=>b.onclick=()=>{if(b.dataset.supplier==='wholesale'&&state.level<7)return;state.supplier=b.dataset.supplier;saveGame(false);syncScene()});
 document.querySelectorAll('[data-quantity]').forEach(b=>b.onclick=()=>{orderQuantity=Number(b.dataset.quantity);syncScene()});
 function syncScene(){
-$('gameSpeed').value=state.speed;$('gameHint').textContent='Toca tu tienda · v0.7 · ritmo ×'+state.speed;$('used').textContent=used();$('capacity').textContent=state.capacity;
+$('gameSpeed').value=state.speed;$('gameHint').textContent='Toca tu tienda · v0.8 · ritmo ×'+state.speed;$('used').textContent=used();$('capacity').textContent=state.capacity;
 const filter=$('productFilter').value,keys=Object.keys(products).filter(k=>unlocked(k)&&(filter==='all'||(filter==='fish'?products[k].vol===0:products[k].vol>0))).sort((a,b)=>products[b].level-products[a].level);
 $('stock').innerHTML=productRows(keys,true);
 $('supplierHelp').textContent=state.level<2?'El proveedor abre en el nivel 2. Empieza vendiendo el stock gratuito.':state.supplier==='local'?'Proveedor local · precio base · 30 s · sin mínimo.':'Mayorista · aproximadamente 15% menos · 90 s · mínimo 10 unidades de un producto.';
@@ -52,7 +52,7 @@ $('wageStatus').textContent=state.employee?'Salarios pagados: '+state.wagesPaid+
 $('salesSummary').textContent=state.level>=8?'Compras intentadas: '+state.potential+' · ventas reales: '+state.served+' · perdidas: '+state.lost+'. Revisa stock y accesos.':'Cada compra necesita producto, un camino y atención en caja.';
 $('contractLink').hidden=state.level<4;$('teamLink').hidden=state.level<9;
 $('rescueBtn').hidden=!!state.delivery||!!state.debt||state.money>=15||Object.entries(state.stock).some(([k,q])=>unlocked(k)&&q>0);
-for(const o of state.layout?.objects||[]){const node=world.querySelector('[data-instance="'+o.id+'"]');if(!node)continue;const stocked=(ShopNavigation.goods[o.kind]||[]).some(k=>state.stock[k]>0);node.querySelectorAll('.fish-swim').forEach(g=>g.style.opacity=stocked?1:0);node.querySelectorAll('.shelf-goods').forEach(g=>g.style.opacity=stocked?1:.25);node.querySelectorAll('.shelf-extra').forEach(g=>g.style.display=state.level>=4?'block':'none');node.querySelectorAll('.warehouse-extra').forEach(g=>g.style.display=state.warehouse?'block':'none')}
+for(const o of state.layout?.objects||[]){const node=world.querySelector('[data-instance="'+o.id+'"]');if(!node)continue;ShopFish.paint(node,o.kind,state.stock);const stocked=(ShopNavigation.goods[o.kind]||[]).some(k=>state.stock[k]>0);node.querySelectorAll('.fish-swim').forEach(g=>g.style.opacity=stocked?1:0);node.querySelectorAll('.shelf-goods').forEach(g=>g.style.opacity=stocked?1:.25);node.querySelectorAll('.shelf-extra').forEach(g=>g.style.display=state.level>=4?'block':'none');node.querySelectorAll('.warehouse-extra').forEach(g=>g.style.display=state.warehouse?'block':'none')}
 objectInfo();
 }
 window.addEventListener('statechange',syncScene);

@@ -1,6 +1,6 @@
 const {chromium}=require('playwright'),assert=require('node:assert/strict');
 (async()=>{const b=await chromium.launch({headless:true,channel:'msedge'});try{
-const p=await b.newPage({viewport:{width:390,height:844}}),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.clock.install({time:new Date('2026-09-09T12:00:00Z')});await p.clock.pauseAt(new Date('2026-09-09T12:00:01Z'));await p.goto('http://127.0.0.1:4174');
+const p=await b.newPage({viewport:{width:390,height:844}}),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.clock.install({time:new Date('2026-09-09T12:00:00Z')});await p.clock.pauseAt(new Date('2026-09-09T12:00:01Z'));await p.goto('http://127.0.0.1:4174');await require('./test-start.cjs')(p);
 await p.evaluate(()=>{state.speed=1;state.moments.cooldown=0;ShopMoments.tick(.1)});
 assert.equal(await p.locator('#panel').isVisible(),false);assert.equal(await p.locator('#momentBar').isVisible(),true);
 await p.locator('[data-moment="accept"]').click();assert.equal(await p.evaluate(()=>ShopMoments.reserved('comet')),2);
@@ -10,7 +10,7 @@ await p.reload();assert.equal(await p.evaluate(()=>state.moments.request.id),req
 assert.equal(await p.evaluate(()=>state.moments.completed),1);assert.equal(await p.evaluate(()=>state.money),560);assert.equal(await p.evaluate(()=>state.kits),0);assert.equal(await p.evaluate(()=>state.groupSales),0);
 await p.evaluate(()=>{state.level=2;Object.assign(state.moments,{active:null,request:null,offer:null,interest:null,sequence:1,cooldown:0});ShopMoments.tick(.1)});
 await p.locator('[data-moment="offer"]').click();assert.equal(await p.evaluate(()=>quote('food',5,'local').cost),80);assert.equal(await p.evaluate(()=>quote('food',5,'wholesale').cost),85);
-await p.screenshot({path:__dirname+'/v07-offer-mobile.png',fullPage:true});
+await p.screenshot({path:__dirname+'/v08-offer-mobile.png',fullPage:true});
 await p.locator('[data-moment="buy"]').click();assert.equal(await p.evaluate(()=>state.money),480);assert.equal(await p.evaluate(()=>state.delivery.q),5);assert.equal(await p.evaluate(()=>state.moments.offer),null);
 await p.clock.runFor(31000);assert.equal(await p.evaluate(()=>state.delivery),null);
 await p.evaluate(()=>{Object.assign(state.moments,{active:null,request:null,offer:null,interest:null,sequence:1,cooldown:0});ShopMoments.tick(.1)});await p.locator('[data-moment="offer"]').click();await p.evaluate(()=>ShopMoments.tick(91));assert.equal(await p.evaluate(()=>quote('food',5,'local').cost),100);

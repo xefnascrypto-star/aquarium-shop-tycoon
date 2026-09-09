@@ -1,4 +1,4 @@
-# Aquarium Shop Tycoon · v0.7
+# Aquarium Shop Tycoon · v0.8
 Demo cozy/isométrica de niveles 1–10. Jugar: https://xefnascrypto-star.github.io/aquarium-shop-tycoon/
 
 ## Recorrido jugable
@@ -37,7 +37,7 @@ Instala dependencias con npm install. Inicia npm run preview y, en otro terminal
 - slice.test.cjs: partida nueva completa sin fijar saldo, nivel o XP; clientes físicos, pedidos, editor, contratación e inversión.
 - safeguards.test.cjs: idempotencia, reservas, capacidad, salarios, deshacer y accesos bloqueados.
 
-playthrough-v06.json conserva el informe de la versión anterior; playthrough-v07.json registra la regresión completa de esta versión. Pruebas responsive a 320/390/768/1280. El balance sigue pendiente de pruebas con jugadores.
+playthrough-v06.json y playthrough-v07.json conservan los informes anteriores; playthrough-v08.json registra la regresión completa de esta versión. Pruebas responsive a 320/390/768/1280. El balance sigue pendiente de pruebas con jugadores.
 
 ## Pulido v0.7
 El local inicial pasa de 144 a 182 casillas (14 × 13): +26,4% de superficie. Las partidas antiguas reciben el espacio adicional sin mover sus muebles válidos. La ampliación comprada sigue siendo de 18 × 16.
@@ -52,3 +52,13 @@ En niveles 1–4 aparecen, de forma espaciada y sin ventanas modales:
 Encargos, ofertas y decisiones se guardan con la partida. No hay nuevos niveles, monedas ni grandes sistemas. Las ventas mantienen el efecto de monedas; ventas y pérdidas rutinarias quedan en el registro y los bocadillos, sin encadenar avisos flotantes.
 characters.js es un adaptador sustituible (crear, actualizar pose y retirar personaje). motion.js contiene la locomoción independiente del arte. La animación provisional añade orientación y una oscilación leve al caminar, respetando la preferencia de movimiento reducido.
 polish-model.test.cjs y polish.test.cjs prueban tres distribuciones distintas de tres acuarios, rotaciones, pasos estrechos, interacción, profundidad, paredes y un pasillo bloqueado/reabierto. polish-v07-report.json contiene las comprobaciones del navegador. moments.test.cjs verifica reservas, cobro real, persistencia, descuentos, caducidad y coexistencia con el pedido completo.
+
+## Personalidad v0.8
+Antes de abrir una partida nueva, elige nombre (hasta 28 caracteres), uno de cinco colores, un emblema y su forma. La tienda permanece en pausa hasta confirmar. El nombre y el emblema aparecen en el rótulo y en la cabecera; los empleados llevan el color corporativo y las bolsas muestran el logo después de una compra real.
+Las partidas anteriores conservan su progreso y reciben una identidad por defecto. En Ajustes → Personalizar mi tienda puedes cambiarla sin reiniciar. La personalización pausa la simulación y permite guardar o cancelar. Empezar de cero vuelve a la creación inicial.
+Los visitantes combinan complexiones, edades visuales, ropa, peinados, tonos de piel y gafas; sus pasos, miradas y gestos de pago son independientes de las rutas. La apariencia se genera sin consumir la secuencia aleatoria que decide compras.
+Betta, Cometa, Guppy, Platy, Neón, Molly, Corydora y Ancistrus tienen siluetas y colores propios. El Betta se representa solo, los neones en grupo y los peces de fondo cerca del sustrato. Sólo se muestran especies disponibles en el stock de ese expositor; son representaciones visuales, no una simulación animal individual. Disco también tiene su representación para la inversión existente.
+Los nuevos textos de identidad y los bocadillos usan un diccionario español/inglés. El selector indica que la gestión anterior sigue en español: no se presenta como una traducción completa del juego.
+No se añaden niveles, sistemas económicos, SDK publicitarios ni anuncios reales.
+
+Pruebas adicionales: identity.test.cjs comprueba creación, pausa, idioma, guardado/recarga, migración, personalización/cancelación, nombres tratados como texto, reinicio y compra con bolsa. visual-v08.test.cjs genera vistas del local abastecido y una lámina de revisión de peces/personajes. identity-v08-report.json y polish-v08-report.json recogen las comprobaciones. Las capturas locales no son recursos de producción.

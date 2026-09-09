@@ -2,7 +2,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('nod
 const base=M.create();assert.equal(base.rooms[0].width*base.rooms[0].depth,182);assert.ok(182/144>=1.25&&182/144<=1.35);
 const legacy=M.clone(fixtures.rows);legacy.version=2;legacy.rooms[0].width=legacy.rooms[0].depth=12;
 const migrated=M.migrate(legacy,state);assert.deepEqual(migrated.objects,legacy.objects);assert.equal(migrated.rooms[0].width,14);assert.equal(migrated.rooms[0].depth,13);
-const ctx={window:{}};vm.runInNewContext(fs.readFileSync(__dirname+'/characters.js','utf8'),ctx);
+const ctx={window:{},crypto:require('node:crypto').webcrypto};vm.runInNewContext(fs.readFileSync(__dirname+'/characters.js','utf8'),ctx);
 const depth=ctx.window.ShopDepth;
 assert.equal(depth.sort([{id:'person',bounds:{x:2.22,y:5.22,width:.56,depth:.56}},{id:'tank',bounds:{x:2,y:2,width:5,depth:3}}])[1].id,'person');
 let samples=0,curves=0;

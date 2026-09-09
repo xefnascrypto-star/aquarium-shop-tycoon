@@ -1,0 +1,34 @@
+{
+  "identity": {
+    "version": 1,
+    "name": "La Casa del Betta",
+    "color": "ocean",
+    "icon": "betta",
+    "shape": "soft",
+    "locale": "es"
+  },
+  "phases": [
+    "to-product",
+    "browsing",
+    "to-queue",
+    "checkout",
+    "leaving",
+    "to-counter",
+    "turning"
+  ],
+  "bag": true,
+  "variants": 28,
+  "species": [
+    "ancistrus",
+    "betta",
+    "comet",
+    "cory",
+    "guppy",
+    "molly",
+    "neon",
+    "platy"
+  ],
+  "legacyMigration": true,
+  "reset": true,
+  "errors": []
+}

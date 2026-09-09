@@ -44,3 +44,30 @@
 @media(max-width:650px){.expanded #viewport{width:112%;margin-top:8px}.expanded .camera{right:5%;bottom:18px}.expanded .shop-status{margin-top:0}}
 
 .moment-note{position:relative;z-index:2;width:440px;max-width:95%;background:#f8f6e4;border:1px solid #d3debd;border-radius:16px;padding:12px 14px;margin:0 0 14px;box-shadow:0 5px 14px #577f6112}.moment-note[hidden]{display:none}.moment-note b{font-size:13px}.moment-note p{font-size:11px;line-height:1.5;margin:5px 0 9px}.moment-note button{min-height:40px;border-radius:10px;padding:8px 12px;background:#e0ead3;font-size:11px}.moment-note button:first-child{background:#397f6d;color:#fff9e6}#momentActions{display:flex;gap:7px;flex-wrap:wrap}.editing .moment-note{display:none}.moment-note:not([hidden])~.guidance{margin-top:0}.moment-note:not([hidden])~.shop-status{margin-top:0}
+
+/* v0.8: the player's identity and restrained living details. */
+.brand{min-width:0;max-width:45%}.brand>span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}.brand .logo{background:none;padding:0;display:block;width:34px;height:34px;flex-shrink:0}.brand .logo svg{width:100%;height:100%}
+.heading h1{overflow-wrap:anywhere;color:var(--shop-color,#427d6d)}
+#shopCreation{width:min(640px,calc(100% - 24px));max-height:94svh;padding:26px;border:0;border-radius:25px;color:#375b50;background:#fff9ec;box-shadow:0 22px 100px #284e4c44}
+#shopCreation::backdrop{background:#d6e7dfed;backdrop-filter:blur(8px)}
+.creation-top{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:10px;letter-spacing:.08em}.creation-top label{letter-spacing:0}
+#shopCreation h1{font-size:27px;line-height:1.12;margin:22px 0 10px}
+#shopCreation p{line-height:1.45}
+#shopCreation input{box-sizing:border-box;width:100%;padding:13px;border:1px solid #bdd2c3;border-radius:12px;background:#fffef7;font:inherit;color:#375b50;margin:7px 0}
+#shopCreation small{display:block;font-size:11px;color:#688274;line-height:1.4}
+#shopCreation fieldset{border:0;padding:0;margin:19px 0}
+#shopCreation legend{font-size:13px;font-weight:bold;margin-bottom:8px}
+.brand-preview{display:flex;align-items:center;gap:16px;border:2px solid #dbceb0;background:#f5e9ce;padding:16px;border-radius:12px;margin:20px 0}
+.brand-preview svg{width:64px;height:64px;flex-shrink:0}.brand-preview b{display:block;font-size:21px;overflow-wrap:anywhere}.brand-preview div{min-width:0}
+.brand-options{display:flex;flex-wrap:wrap;gap:7px}.brand-options button{min-width:61px;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:8px 6px;background:#f3f0df;color:#48695b;border:2px solid transparent;border-radius:12px;font-size:11px;min-height:44px}
+.brand-options button[aria-pressed=true]{border-color:#427d6d;background:#dfebdd}
+.brand-options svg{width:32px;height:32px}.color-choice>span{background:var(--swatch);width:24px;height:24px;border-radius:50%;display:block}
+.shapes button{flex:1}.start-shop{width:100%;padding:15px;background:#427d6d;color:#fff8e5;border:0;border-radius:13px;font-size:16px;font-weight:bold}.creation-note{font-size:12px}.language-note{margin-top:12px}
+.identity-info{display:grid;grid-template-columns:48px 1fr;gap:8px;align-items:center}.identity-info svg{width:44px;height:44px;grid-row:span 2}.identity-info p{margin:0;font-size:12px}
+.fish-swim{animation:none!important}.species-fish{animation:fish-drift 4.5s ease-in-out infinite alternate}.betta-fish{animation-duration:7s}.bottom-fish{animation:bottom-drift 9s ease-in-out infinite alternate}
+@keyframes fish-drift{from{transform:translate(-3px,-1px)}to{transform:translate(4px,1px)}}@keyframes bottom-drift{from{transform:translate(-2px,0)}to{transform:translate(3px,0)}}
+.shop-clerk.serving .brand-badge{opacity:.75}.shop-clerk.serving{filter:brightness(1.05)}.purchase-bag{pointer-events:none}
+@media(max-width:430px){#shopCreation{padding:19px}.creation-top{align-items:flex-start;flex-direction:column}#shopCreation h1{font-size:24px}.brand-preview b{font-size:18px}.brand-options button{min-width:54px}.brand{max-width:36%}.brand>span:last-child{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.species-fish{animation:none!important}}
+
+.shop-clerk>path:nth-of-type(2){fill:var(--shop-color,#427d6d)}.shop-clerk.serving>path:nth-of-type(3){transform:rotate(-5deg);transform-origin:0 -40px}

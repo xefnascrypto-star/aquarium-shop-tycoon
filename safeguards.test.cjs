@@ -1,6 +1,6 @@
 const {chromium}=require('playwright'),assert=require('node:assert/strict');
 (async()=>{const b=await chromium.launch({headless:true,channel:'msedge'});try{
-const p=await b.newPage({viewport:{width:390,height:844}}),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.clock.install({time:new Date('2026-09-08T12:00:00Z')});await p.clock.pauseAt(new Date('2026-09-08T12:00:01Z'));await p.goto('http://127.0.0.1:4174');
+const p=await b.newPage({viewport:{width:390,height:844}}),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.clock.install({time:new Date('2026-09-08T12:00:00Z')});await p.clock.pauseAt(new Date('2026-09-08T12:00:01Z'));await p.goto('http://127.0.0.1:4174');await require('./test-start.cjs')(p);
 await p.evaluate(()=>{state.served=500;state.xp=10000;recalcLevel();render()});assert.equal(await p.evaluate(()=>state.level),2,'sales/XP alone must stop at business gates');
 await p.evaluate(()=>{state.level=3;state.money=2000;buyUpgrade('tank3')});assert.ok(await p.evaluate(()=>shopEditor.pending().some(o=>o.kind==='tank3')));
 assert.equal(await p.evaluate(()=>ShopNavigation.build(state.layout,state).grids.main.objects.some(o=>o.kind==='tank3')),false);
