@@ -1,6 +1,6 @@
 // Pure navigation on the placement grid. Orthogonal steps never cut corners.
 (function(root,factory){const m=factory(typeof module==='object'&&module.exports?require('./layout-model.js'):root.ShopLayout);if(typeof module==='object'&&module.exports)module.exports=m;else root.ShopNavigation=m})(globalThis,M=>{
- const goods={betta:'betta',comet:'comet',tank3:'betta',shelf:'food'};
+ const goods={betta:['betta'],comet:['comet'],tank3:['guppy','platy'],tank4:['betta','comet'],tank5:['guppy','platy'],shelf:['food','conditioner','filter','heater','light','siphon','thermometer'],shelf2:['food','conditioner','filter','heater','light','siphon','thermometer'],counter:['food','conditioner'],battery:['neon','molly','cory','ancistrus'],plants:['anubias'],professional:['discus']};
  const key=c=>c.x+','+c.y;
  function build(layout,state={}){
   const grids={};
@@ -43,7 +43,7 @@
  function plan(graph,product,roomId='main',start){
   const g=graph.grids[roomId];if(!g||!g.entrance)return null;
   const origin=start||g.entrance,counters=g.objects.filter(o=>o.kind==='counter'),options=[];
-  for(const object of g.objects.filter(o=>goods[o.kind]===product)){
+  for(const object of g.objects.filter(o=>goods[o.kind]?.includes(product))){
    const toProduct=route(g,origin,services(g,object));if(!toProduct)continue;
    for(const counter of counters){
     const toCounter=route(g,toProduct.at(-1),services(g,counter));if(!toCounter)continue;

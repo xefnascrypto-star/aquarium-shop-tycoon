@@ -1,0 +1,35 @@
+const {chromium}=require('playwright'),assert=require('node:assert/strict');
+(async()=>{const b=await chromium.launch({headless:true,channel:'msedge'});try{
+const p=await b.newPage({viewport:{width:390,height:844}}),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.clock.install({time:new Date('2026-09-08T12:00:00Z')});await p.clock.pauseAt(new Date('2026-09-08T12:00:01Z'));await p.goto('http://127.0.0.1:4174');
+await p.evaluate(()=>{state.served=500;state.xp=10000;recalcLevel();render()});assert.equal(await p.evaluate(()=>state.level),2,'sales/XP alone must stop at business gates');
+await p.evaluate(()=>{state.level=3;state.money=2000;buyUpgrade('tank3')});assert.ok(await p.evaluate(()=>shopEditor.pending().some(o=>o.kind==='tank3')));
+assert.equal(await p.evaluate(()=>ShopNavigation.build(state.layout,state).grids.main.objects.some(o=>o.kind==='tank3')),false);
+const paid=await p.evaluate(()=>state.money);await p.evaluate(()=>buyUpgrade('tank3'));assert.equal(await p.evaluate(()=>state.money),paid);
+await p.locator('#editSuggest').click();await p.locator('#editConfirm').click();assert.ok(await p.evaluate(()=>placed('tank3')));
+const placementXp=await p.evaluate(()=>state.xp);await p.locator('#editUndo').click();assert.ok(await p.evaluate(()=>shopEditor.pending().some(o=>o.kind==='tank3')));assert.equal(await p.evaluate(()=>state.money),paid);
+await p.locator('#editObject').selectOption('tank-3');await p.locator('#editSuggest').click();await p.locator('#editRotate').click();await p.locator('#editSuggest').click();await p.locator('#editConfirm').click();await p.locator('#editExit').click();assert.equal(await p.evaluate(()=>state.xp),placementXp,'undo/reconfirm must not farm XP');
+await p.evaluate(()=>{state.level=7;state.money=1000;state.supplier='wholesale';state.delivery=null;render()});
+await p.evaluate(()=>order('neon',5));assert.equal(await p.evaluate(()=>state.delivery),null);await p.evaluate(()=>order('neon',10));assert.equal(await p.evaluate(()=>state.money),890);assert.equal(await p.evaluate(()=>state.delivery.remaining),90000);
+await p.evaluate(()=>{state.delivery=null;state.supplier='local';state.stock.food=20;state.stock.conditioner=0;state.money=1000;order('filter',1)});assert.equal(await p.evaluate(()=>state.delivery),null,'cannot exceed volume');
+await p.evaluate(()=>{state.stock=Object.fromEntries(Object.keys(products).map(k=>[k,0]));state.level=4;state.kitRequested=true;for(const [k,q] of Object.entries(ShopDesign.kit))state.stock[k]=q;state.money=1000});
+assert.equal(await p.evaluate(()=>sellBasket({betta:1})),null,'kit stock is reserved');
+const amount=await p.evaluate(()=>Object.entries(ShopDesign.kit).reduce((n,[k,q])=>n+products[k].sell*q,0));await p.evaluate(()=>sellBasket(ShopDesign.kit));assert.equal(await p.evaluate(()=>state.money),1000+amount);assert.equal(await p.evaluate(()=>state.kits),1);assert.equal(await p.evaluate(()=>sellBasket(ShopDesign.kit)),null);
+await p.locator('#editStart').click();
+await p.evaluate(()=>{state.level=9;state.money=2000;state.employee=null;hire('nico');state.speed=1});
+assert.equal(await p.evaluate(()=>state.money),500);
+await p.clock.runFor(65000);assert.equal(await p.evaluate(()=>state.wagesPaid),0,'no wages while editing');
+await p.locator('#editExit').click();await p.clock.runFor(61000);assert.equal(await p.evaluate(()=>state.wagesPaid),1);assert.equal(await p.evaluate(()=>state.money),470);
+await p.evaluate(()=>{state.money=0;state.wageElapsed=59.9;state.stock=Object.fromEntries(Object.keys(products).map(k=>[k,0]));render()});await p.clock.runFor(1000);assert.equal(await p.evaluate(()=>state.money),0);assert.equal(await p.evaluate(()=>state.employeeUnpaid),true);
+await p.evaluate(()=>rescue());assert.equal(await p.evaluate(()=>state.stock.comet),1);assert.equal(await p.evaluate(()=>state.debt),15);await p.evaluate(()=>rescue());assert.equal(await p.evaluate(()=>state.stock.comet),1);
+await p.locator('#editStart').click();
+await p.evaluate(()=>{state.level=1;state.employee=null;state.money=500;state.stock=Object.fromEntries(Object.keys(products).map(k=>[k,k==='betta'?10:0]));state.layout=ShopLayout.create();const changes={'betta-1':[0,4],'comet-1':[5,4],'plant-2':[10,4],'warehouse-1':[0,7]};for(const o of state.layout.objects)if(changes[o.id])[o.x,o.y]=changes[o.id];state.served=0;state.speed=12;render()});
+await p.locator('#editExit').click();assert.equal(await p.locator('#accessAlert').isVisible(),true);await p.clock.runFor(5000);assert.equal(await p.evaluate(()=>state.served),0);assert.ok(await p.evaluate(()=>state.lost)>0);
+await p.locator('#accessAlert').click();assert.match(await p.locator('#accessList').textContent(),/Mostrador/);await p.locator('#closePanel').click();
+await p.locator('#editStart').click();await p.locator('#editObject').selectOption('plant-2');await p.locator('#editSuggest').click();await p.locator('#editConfirm').click();await p.locator('#editExit').click();assert.equal(await p.locator('#accessAlert').isVisible(),false);await p.clock.runFor(5000);assert.ok(await p.evaluate(()=>state.served)>0);
+await p.evaluate(()=>{state.level=10;state.money=15000;state.warehouse=true;state.capacity=50;buyUpgrade('warehouse2')});assert.equal(await p.evaluate(()=>state.capacity),100);assert.equal(await p.evaluate(()=>state.money),4000);await p.evaluate(()=>buyUpgrade('warehouse2'));assert.equal(await p.evaluate(()=>state.money),4000);
+await p.evaluate(()=>{state.money=15000;buyUpgrade('professional')});assert.ok(await p.evaluate(()=>state.professional));assert.ok(await p.evaluate(()=>shopEditor.pending().some(o=>o.kind==='professional')));
+await p.locator('#editExit').click();
+for(const width of [320,390,768,1280]){await p.setViewportSize({width,height:960});await p.locator('[data-panel="stock"]').first().click();assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);await p.locator('#closePanel').click()}
+assert.deepEqual(errors,[]);
+console.log('PASS: XP/objective gates; purchase idempotency; pending undo without refund; supplier minimum and price; stock capacity; kit reservation and atomic sale; wages/edit pause/unpaid staff; recovery advance; blocked paths and restored circulation; all level-10 alternatives; responsive.');
+}finally{await b.close()}})().catch(e=>{console.error(e);process.exitCode=1});

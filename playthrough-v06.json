@@ -1,0 +1,88 @@
+{
+  "levels": [
+    {
+      "step": 0,
+      "level": 1,
+      "money": 500,
+      "served": 0,
+      "xp": 0
+    },
+    {
+      "step": 5,
+      "level": 2,
+      "money": 740,
+      "served": 6,
+      "xp": 60
+    },
+    {
+      "step": 10,
+      "level": 3,
+      "money": 480,
+      "served": 9,
+      "xp": 150
+    },
+    {
+      "step": 17,
+      "level": 4,
+      "money": 200,
+      "served": 15,
+      "xp": 270
+    },
+    {
+      "step": 39,
+      "level": 5,
+      "money": 965,
+      "served": 32,
+      "xp": 670
+    },
+    {
+      "step": 58,
+      "level": 6,
+      "money": 50,
+      "served": 54,
+      "xp": 1040
+    },
+    {
+      "step": 147,
+      "level": 7,
+      "money": 340,
+      "served": 175,
+      "xp": 2910
+    },
+    {
+      "step": 155,
+      "level": 8,
+      "money": 300,
+      "served": 180,
+      "xp": 2980
+    },
+    {
+      "step": 326,
+      "level": 9,
+      "money": 45,
+      "served": 388,
+      "xp": 5850
+    },
+    {
+      "step": 652,
+      "level": 10,
+      "money": 12135,
+      "served": 1147,
+      "xp": 14410
+    }
+  ],
+  "final": {
+    "money": 135,
+    "served": 1147,
+    "level": 10,
+    "xp": 14450,
+    "pearls": 10,
+    "kits": 1,
+    "groupSales": 1,
+    "employee": "eva",
+    "wages": 54,
+    "lost": 478,
+    "investment": "plants"
+  },
+  "checks": "Physical paths, pending cancel/reload, placement confirmation, all ten levels without money/XP cheats, suppliers, kit, groups, wages, first investment, persistence, responsive. PASS"
+}

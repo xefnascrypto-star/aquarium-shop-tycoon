@@ -1,16 +1,14 @@
-# Distribución de tienda — v1
-- Catálogo: un tipo define huella rectangular en casillas, etiqueta, acción y requisito de compra. No contiene posiciones.
-- Instancia: id estable, kind, roomId, x, y, rotation. Dos partidas del mismo nivel pueden guardar coordenadas distintas.
-- Habitación: id, type, width, depth, origin y reserved. Las zonas reservadas protegen puertas. El origen sólo afecta al dibujo.
-- Proyección: casillas de 60×30 píxeles isométricos. La entrada de puntero se transforma con la matriz inversa del mundo, por lo que respeta zoom y desplazamiento.
-- Validación pura: dimensiones según orientación, límites, entrada y objetos adquiridos. Compartir un borde es válido.
-- Transacción: la previsualización modifica un borrador. Confirmar valida otra vez y actualiza la partida; Cancelar o Terminar lo descartan. Deshacer guarda instantáneas de distribución, nunca de monedas/stock, y se limpia cuando cambia el mobiliario adquirido.
-- Migración: partidas sin layout reciben defaults. Los IDs y tipos conocidos se preservan. Una posición inválida se reubica en una celda libre. Las habitaciones se derivan de definiciones de juego autorizadas, no de datos arbitrarios del guardado.
-- Ampliaciones futuras: añadir definiciones de sala y adyacencias/puertas; desbloquearlas desde economía; extender la migración para mantener IDs de salas y objetos. El modelo admite validar por roomId. No se crean todavía los departamentos ni se alteran los niveles.
-- Orientaciones actuales: 0° y 90°, con intercambio de huella y arte reflejado sin inclinar sus verticales. Los rótulos mantienen lectura normal. Una futura librería de vistas a cuatro lados puede ampliar rotaciones sin modificar IDs.
-- Circulación v0.5: navigation.js construye una cuadrícula por habitación con las huellas adquiridas y rotadas. BFS de cuatro vecinos evita obstáculos y cortes de esquina. Los puntos de servicio están en los bordes sur y este de cada mueble; se calculan desde su huella, sin rutas fijas.
-- Plan de visita: puerta → producto elegido → caja → puerta. Se exige un recorrido completo. La evaluación de accesibilidad se calcula también sobre el borrador del editor; avisa pero no prohíbe guardar distribuciones bloqueadas.
-- Ejecución: visitors.js separa entrada, recorrido, observación, caja y salida. Los actores interpolan únicamente entre casillas libres vecinas, replanifican en el siguiente centro al cambiar el mobiliario y se dibujan con orden de profundidad. Las mejoras protegen las casillas del segmento ocupado para evitar construir bajo un cliente.
-- Transacciones económicas: una visita paga como máximo una vez, tras llegar a una casilla de servicio de caja. customer(product, true) comprueba exactamente ese stock antes de descontar; no sustituye silenciosamente otro producto. Las visitas sin acceso o stock no cobran. El límite entre pagos conserva ocho segundos como mínimo, no garantiza ingresos cada ocho segundos.
-- Edición: pausa y retira visitantes transitorios; al terminar las nuevas visitas parten de la entrada. Los pagos completados se conservan; no se guarda ni recupera una transacción pendiente. No se avanza la animación en pestañas ocultas.
-- Extensión: servicios y fases están separados para añadir colas, departamentos o exposición posteriormente. Las rutas actuales son locales a una habitación; futuras conexiones requieren portales explícitos. Los clientes no son obstáculos entre sí todavía. El bonus offline anterior continúa siendo provisional y no ejecuta pathfinding.
+# Arquitectura v0.6
+design.js centraliza productos, precios, perfiles y definiciones de niveles 1–10. requirements combina XP, ventas e hitos; recalcLevel sólo avanza. placementRewarded impide obtener XP repetidamente con Deshacer.
+
+layout-model.js separa catálogo e instancias (id, kind, roomId, x, y, rotation, placed). purchased representa propiedad; owned sólo incluye objetos colocados. Migración acepta layouts 1 y 2, conserva posiciones válidas y deja pendientes los muebles que no caben. La geometría deriva de expansion, no de dimensiones arbitrarias guardadas.
+
+editor.js mantiene borradores y un historial de distribución, nunca de dinero. Comprar no coloca. Confirmar valida; cancelar conserva la compra pendiente. Hueco propone una posición con accesos; necesita confirmación. drawRoom deriva suelo y paredes de la cuadrícula, preservando el arte de scene.js/objects.js.
+
+navigation.js construye obstáculos de huellas colocadas y calcula BFS de cuatro vecinos. Los bordes sur y este son puntos de servicio. visitors.js mantiene cestas, itinerarios, cola y puestos. El conjunto completo visita cada expositor y paga atómicamente. Los turnos asignan hasta dos empleados; los personajes no son obstáculos móviles entre sí. Editar retira visitas sin cobrar y al terminar reinicia desde la puerta.
+
+economy.js valida desbloqueo, saldo, cantidad y volumen antes de descontar. Un envío en curso evita sobreventa de espacio. sellBasket comprueba toda la cesta antes de modificarla; los productos del conjunto aceptado quedan reservados. El anticipo sólo existe sin stock, entrega, saldo suficiente ni deuda previa.
+
+El reloj usa speed compartido para clientes, entregas y salarios. Los visitantes subdividen pasos para conservar colisiones a ×12. No se acumulan ingresos al cerrar u ocultar. Entregas y salarios guardan tiempo restante; visitantes y colas son transitorios.
+
+El catálogo conserva roomId y tipos de futuras habitaciones. Las conexiones entre departamentos requerirán portales explícitos. No hay niveles 11–80, marketing, satisfacción ni monetización implementados.

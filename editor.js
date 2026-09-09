@@ -2,13 +2,13 @@
 (() => {
  const M=ShopLayout;
  state.layout=M.migrate(state.layout,state);
- let active=false,draft=null,history=[],gesture=null,longPress=null,unlock=!!state.tank3;
+ let active=false,draft=null,history=[],gesture=null,longPress=null,unlock='';
  const bar=$('editorBar');
  const current=()=>state.layout;
  function constructionLayout(){const l=M.clone(current());for(const c of window.shopCirculation?.occupied()||[]){const room=l.rooms.find(r=>r.id===c.roomId);if(room)room.reserved.push({x:c.x,y:c.y,width:1,depth:1})}return l}
  const working=()=>{const layout=M.clone(current());if(draft)layout.objects=layout.objects.map(o=>o.id===draft.id?{...draft}:o);return layout};
  function paint(){
-  drawFurniture(working(),state);
+  drawRoom(current().rooms[0]);drawFurniture(working(),state);
   syncScene();updateJourney();
   $('gridLayer').style.display=active?'block':'none';
   $('placementLayer').innerHTML='';
@@ -20,7 +20,7 @@
    $('editConfirm').disabled=!!invalid;
    const node=world.querySelector('[data-instance="'+draft.id+'"]');if(node)node.classList.add('selected-object');
   }else{$('editHelp').textContent='Selecciona un objeto. Las ventas están en pausa.';$('editConfirm').disabled=true}
-  for(const id of ['editRotate','editCancel'])$(id).disabled=!draft;
+  for(const id of ['editRotate','editCancel','editSuggest'])$(id).disabled=!draft;
   document.querySelectorAll('[data-move]').forEach(b=>b.disabled=!draft);
   $('editUndo').disabled=!history.length;
   updateAccessibility(working(),active);
@@ -34,11 +34,11 @@
  function refreshSelect(){
   const select=$('editObject');select.replaceChildren();
   const empty=document.createElement('option');empty.value='';empty.textContent='Seleccionar objeto…';select.append(empty);
-  current().objects.filter(o=>M.owned(o,state)).forEach(o=>{const opt=document.createElement('option');opt.value=o.id;opt.textContent=M.catalog[o.kind].label+' · '+o.id;select.append(opt)});
+  current().objects.filter(o=>M.purchased(o,state)).forEach(o=>{const opt=document.createElement('option');opt.value=o.id;opt.textContent=M.catalog[o.kind].label+(o.placed===false?' · pendiente':'');select.append(opt)});
   select.value=draft?.id||'';
  }
  function select(id){
-  const o=current().objects.find(o=>o.id===id&&M.owned(o,state));draft=o?M.clone(o):null;
+  const o=current().objects.find(o=>o.id===id&&M.purchased(o,state));draft=o?M.clone(o):null;if(draft&&draft.placed===false){draft=M.findFree(current(),draft,state)||draft;draft.placed=true}
   $('editObject').value=draft?.id||'';paint();
  }
  function begin(id){
@@ -55,9 +55,9 @@
   const previous=current().objects.find(o=>o.id===draft.id);
   if(JSON.stringify(previous)!==JSON.stringify(draft)){
    history.push(M.clone(current()));if(history.length>30)history.shift();
-   state.layout=working();saveGame(false);window.dispatchEvent(new Event('layoutchange'));
+   state.layout=working();if(previous.placed===false&&!state.placementRewarded[draft.id]){state.xp+=10;state.placementRewarded[draft.id]=true}recalcLevel();saveGame(false);window.dispatchEvent(new Event('layoutchange'));
   }
-  draft=null;refreshSelect();paint();
+  draft=null;refreshSelect();paint();render();
  }
  function undo(){
   if(!history.length)return;
@@ -70,9 +70,18 @@
   const point=new DOMPoint(event.clientX,event.clientY).matrixTransform(world.getScreenCTM().inverse());
   return M.unproject(current().rooms[0],point.x,point.y);
  }
- window.shopEditor={canPlace(kind){const o=current().objects.find(o=>o.kind===kind);const s={...state,[kind]:true};return o&&(!M.validate(constructionLayout(),o,s)||!!M.findFree(constructionLayout(),o,s))},get active(){return active},begin,end,get layout(){return M.clone(current())}};
+ window.shopEditor={canPlace(kind){const o=current().objects.find(o=>o.kind===kind);const s={...state,[kind]:true};return o&&(!M.validate(constructionLayout(),o,s)||!!M.findFree(constructionLayout(),o,s))},pending(){return current().objects.filter(o=>M.purchased(o,state)&&o.placed===false)},get active(){return active},begin,end,get layout(){return M.clone(current())}};
  $('editStart').onclick=()=>begin();$('editExit').onclick=end;$('editConfirm').onclick=confirm;$('editUndo').onclick=undo;
  $('editCancel').onclick=()=>{draft=null;refreshSelect();paint()};
+ $('editSuggest').onclick=()=>{
+ if(!draft)return;const room=current().rooms.find(r=>r.id===draft.roomId);let suggestion=null;
+ outer:for(const rotation of [draft.rotation,draft.rotation===0?90:0])for(let y=0;y<room.depth;y++)for(let x=0;x<room.width;x++){
+ const o={...draft,x,y,rotation,placed:true};if(M.validate(current(),o,state))continue;
+ const l=M.clone(current());l.objects=l.objects.map(p=>p.id===o.id?o:p);
+ if(ShopNavigation.assess(ShopNavigation.build(l,state)).every(o=>o.reachable)){suggestion=o;break outer}
+ }
+ if(suggestion){draft=suggestion;paint()}else {$('editHelp').textContent='No encuentro un hueco con todos los accesos. Mueve otros objetos o amplía el local.'}
+ };
  $('editRotate').onclick=()=>{if(draft){draft.rotation=draft.rotation===0?90:0;paint()}};
  $('editObject').onchange=e=>select(e.target.value);
  document.querySelectorAll('[data-move]').forEach(b=>b.onclick=()=>{if(draft){const [x,y]=b.dataset.move.split(',').map(Number);draft.x+=x;draft.y+=y;paint()}});
@@ -100,12 +109,9 @@
  world.addEventListener('keydown',e=>{if(active&&(e.key==='Enter'||e.key===' ')){const item=e.target.closest('[data-instance]');if(item){e.preventDefault();e.stopImmediatePropagation();select(item.dataset.instance)}}},true);
  document.addEventListener('keydown',e=>{if(active&&e.key==='Escape'){e.preventDefault();if(draft){draft=null;refreshSelect();paint()}else end()}});
  window.addEventListener('statechange',()=>{
-  if(unlock!==!!state.tank3){
-   unlock=!!state.tank3;history=[];draft=null;
-   const third=current().objects.find(o=>o.kind==='tank3');
-   if(M.validate(constructionLayout(),third,state)){const free=M.findFree(constructionLayout(),third,state);if(free)Object.assign(third,free)}
-   refreshSelect();paint();saveGame(false);
-  }
+ const next=JSON.stringify([Object.keys(ShopDesign.upgrades).map(k=>!!state[k]),state.employee]);
+ if(unlock!==next){unlock=next;history=[];draft=null;refreshSelect();grid();paint();saveGame(false)}
  });
+ window.addEventListener('layoutchange',()=>{drawRoom(current().rooms[0]);grid();paint();refreshSelect()});
  paint();grid();saveGame(false);
 })();

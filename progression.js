@@ -1,51 +1,27 @@
-// Guidance follows existing progress; no rewards or price changes.
-const thresholds=[0,5,10,18,28,40,55,75,100,130];
-function milestones(){
- return [
- {title:'Tu primera venta',detail:'Un visitante comprará automáticamente si hay stock.',done:state.served>=1,current:Math.min(state.served,1),total:1,action:'activity'},
- {title:'Reponer para seguir',detail:'Pide al proveedor y recibe tu primera entrega.',done:state.restocked>=1||state.shelf,current:state.restocked>=1||state.shelf?1:0,total:1,action:'stock'},
- {title:'Tu primera estantería',detail:'Instala la estantería por 250 monedas.',done:state.shelf,current:state.shelf?250:Math.min(state.money,250),total:250,action:'upgrades'},
- {title:'Un hogar para más peces',detail:'Construye el tercer acuario por 350 monedas.',done:state.tank3,current:state.tank3?350:Math.min(state.money,350),total:350,action:'upgrades'},
- {title:'Un negocio de barrio',detail:'Llega a 75 ventas para alcanzar el nivel 8.',done:state.level>=8,current:Math.min(state.served,75),total:75,action:'activity'},
- {title:'Más espacio para crecer',detail:'Amplía el almacén por 4.000 monedas.',done:state.warehouse,current:state.warehouse?4000:Math.min(state.money,4000),total:4000,action:'upgrades'}
- ];
-}
-let currentMilestone,previousLevel=state.level;
+let currentMilestone;
 function updateJourney(){
- const steps=milestones(),active=steps.find(s=>!s.done);
- currentMilestone=active;
- $('goal').textContent=active?active.title:'¡Tu tienda ha crecido!';
- $('goalDetail').textContent=active?active.detail:'Has completado este recorrido. Sigue cuidando tu stock.';
- $('goalProgress').max=active?active.total:1;$('goalProgress').value=active?active.current:1;
- $('goalProgress').setAttribute('aria-label',active?active.title+': '+active.current+' de '+active.total:'Recorrido completado');
- $('journeyList').replaceChildren(...steps.map((s,i)=>{
-  const li=document.createElement('li');li.className=s.done?'complete':s===active?'current':'';
-  const name=document.createElement('b');name.textContent=(s.done?'✓ ':String(i+1)+'. ')+s.title;
-  const desc=document.createElement('small');desc.textContent=s.done?'Completado':s.detail;
-  li.append(name,desc);return li;
- }));
- $('journeyAction').textContent=active?'Ir al siguiente paso':'Volver a la tienda';
- $('levelProgress').textContent=state.level>=10?'Nivel máximo':state.served+' / '+thresholds[state.level]+' ventas';
- if(state.level>previousLevel)window.dispatchEvent(new CustomEvent('notice',{detail:'¡Nivel '+state.level+'! Tu tienda sigue creciendo.'}));
- previousLevel=state.level;updateShopStatus();
+const target=ShopDesign.levels.find(l=>l.level===state.level+1),needs=target?requirements(target.level):[];
+const missing=needs.find(r=>!r.done&&r.action)||needs.find(r=>!r.done);
+const pending=state.layout?.objects.find(o=>ShopLayout.purchased(o,state)&&o.placed===false);
+currentMilestone=pending?{action:'place',id:pending.id}:missing||{action:state.level===10?'upgrades':'stock'};
+$('goal').textContent=pending?'Tu compra espera su sitio':target?'Nivel '+target.level+' · '+target.name:state.investment?'Tu siguiente inversión':'Tu primera gran decisión';
+$('goalDetail').textContent=pending?'Coloca '+ShopLayout.catalog[pending.kind].label+' desde el editor.':missing?(missing.action?missing.label:'Gana experiencia atendiendo clientes y recibiendo pedidos.'):state.level===10?'Elige qué desarrollar primero. Las otras inversiones seguirán disponibles.':'Atiende y repón para seguir creciendo.';
+$('goalProgress').max=needs.length||1;$('goalProgress').value=needs.length?needs.filter(r=>r.done).length:1;
+$('goalProgress').setAttribute('aria-label','Objetivos completados: '+needs.filter(r=>r.done).length+' de '+needs.length);
+$('journeyIntro').textContent=target?'Para llegar al nivel '+target.level+' necesitas:':'Demo completada hasta el nivel 10. Puedes seguir haciendo crecer este local.';
+$('journeyList').innerHTML=needs.map(r=>'<li class="'+(r.done?'complete':'current')+'"><b>'+(r.done?'✓ ':'○ ')+r.label+'</b>'+(r.value!==undefined?'<small>'+r.value+' / '+r.total+'</small>':'')+'</li>').join('');
+$('journeyAction').textContent=pending?'Colocar compra':missing?.action?'Ir al objetivo':'Volver a la tienda';
+$('levelProgress').textContent=state.level===10?'Primera gran decisión':state.xp>=target.xp?'XP listo · faltan hitos':state.xp+' / '+target.xp+' XP';
+updateShopStatus();
 }
 function updateShopStatus(){
- const status=$('shopStatus');
- if(state.delivery){const seconds=Math.max(0,Math.ceil((state.delivery.end-Date.now())/1000));status.hidden=false;status.textContent='▤ '+state.delivery.q+' × '+products[state.delivery.k].name+' · llega en '+seconds+' s';status.classList.remove('low-stock');}
- else {
-  const empty=Object.keys(products).filter(k=>state.stock[k]===0),low=Object.keys(products).filter(k=>state.stock[k]>0&&state.stock[k]<=2);
-  status.hidden=!empty.length&&!low.length;
-  status.textContent=empty.length?'Reponer: '+empty.map(k=>products[k].name).join(', '):low.length?'Quedan pocas unidades · visita al proveedor':'';
-  status.classList.toggle('low-stock',!!empty.length);
- }
+const d=state.delivery,status=$('shopStatus');let message='';
+if(d)message='▤ '+d.q+' × '+products[d.k].name+' · '+Math.max(0,Math.ceil(d.remaining/1000))+' s de juego';
+else {const empty=Object.keys(products).filter(k=>unlocked(k)&&state.stock[k]===0);if(empty.length)message='Reponer '+empty.length+' productos'+(state.level>=8?' · '+state.lost+' compras perdidas':'')}
+status.hidden=!message;status.textContent=message;$('delivery').textContent=d?message:'';
+if($('deliveryArt')){$('deliveryArt').innerHTML=d?'<g transform="translate(800 353)">'+box(0,-28,29,23,28)+'<text x="0" y="-40" text-anchor="middle" fill="#447561" font-size="15">▤ '+Math.max(0,Math.ceil(d.remaining/1000))+' s</text></g>':''}
 }
-$('goalAction').onclick=()=>showPanel('journey','Tu camino');
-$('journeyAction').onclick=()=>{if(currentMilestone)showPanel(currentMilestone.action);else panel.close()};
-document.querySelectorAll('[data-quantity]').forEach(b=>b.onclick=()=>{
- orderQuantity=Number(b.dataset.quantity);
- document.querySelectorAll('[data-quantity]').forEach(other=>other.setAttribute('aria-pressed',String(other===b)));
- syncScene();updateJourney();
-});
-window.addEventListener('statechange',updateJourney);
+$('goalAction').onclick=()=>{if(currentMilestone?.action==='place')shopEditor.begin(currentMilestone.id);else showPanel('journey')};
+$('journeyAction').onclick=()=>{if(currentMilestone?.action==='place')shopEditor.begin(currentMilestone.id);else if(currentMilestone?.action)showPanel(currentMilestone.action);else panel.close()};
+window.addEventListener('statechange',updateJourney);window.addEventListener('layoutchange',updateJourney);
 setInterval(updateShopStatus,250);
-updateJourney();

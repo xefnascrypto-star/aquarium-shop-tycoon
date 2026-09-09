@@ -1,29 +1,40 @@
-# Aquarium Shop Tycoon · v0.5
-Juego de gestión isométrico/cozy, en español y adaptable a móvil.
+# Aquarium Shop Tycoon · v0.6
+Demo cozy/isométrica de niveles 1–10. Jugar: https://xefnascrypto-star.github.io/aquarium-shop-tycoon/
 
-## Jugar
-https://xefnascrypto-star.github.io/aquarium-shop-tycoon/
+## Recorrido jugable
+Empieza con 500 monedas, dos acuarios, mostrador, stock gratuito y capacidad 20. Comida y acondicionador se exponen inicialmente en el mostrador.
+- Nivel 2: estantería 250, proveedor local y primer pedido.
+- Nivel 3: acuario de 60 L 350, Guppy y Platy.
+- Nivel 4: filtro, calentador, luz, sifón y termómetro; pedido de acuario completo.
+- Nivel 5: ampliación 1.200, de 12 × 12 a 18 × 16 casillas; exige 25 ventas y un conjunto completo, concede 10 Perlas. Cuarto/quinto acuario y segunda estantería opcionales.
+- Nivel 6: batería Agua Dulce I 2.000; Neón, Molly, Corydora y Ancistrus, con ventas en grupos.
+- Nivel 7: competencia entre proveedor local (precio base, 30 s, sin mínimo) y mayorista (aproximadamente 15% menos, 90 s, mínimo 10 del mismo producto). Lotes 1, 5, 10 o 20.
+- Nivel 8: compras perdidas por stock/acceso y Almacén I 4.000, capacidad 50.
+- Nivel 9: colas, dos puestos y contratación 1.500. Eva: atención 3,5 s, salario 40/min; Nico: 5 s, 30/min. Dependiente inicial: 6 s y sin salario.
+- Nivel 10: Plantas I 12.000, batería profesional 14.000 o Almacén II 11.000 (capacidad 100). Elegir no bloquea las demás. Las dos exposiciones introducen Anubias y Discos, respectivamente.
 
-Toca acuarios y estantería para consultar stock y pedir productos. Arrastra la cámara, pellizca o usa +/−. Editar permite seleccionar, mover, girar, confirmar, cancelar y deshacer muebles. Posiciones y orientaciones se guardan con la partida anterior.
+Los ascensos combinan XP, ventas mínimas e hitos comerciales. Llegar al nivel 10 exige además contratar, pagar un salario y reservar 12.000 monedas. El saldo no se ajusta artificialmente; completar tarde otros hitos puede dar una reserva mayor.
+Todos los precios, tiempos y cantidades son provisionales. No se implementan niveles 11–80 ni monetización.
 
-## Circulación real
-Hasta tres clientes entran por la puerta, buscan un producto disponible, caminan entre muebles, lo miran durante 2,5 segundos, van a caja, pagan y salen. Las rutas usan casillas contiguas sin diagonales. Acuarios y muebles adquiridos son obstáculos según su posición y orientación.
+## Editor y circulación
+Cada mueble comprado queda pendiente hasta confirmar su colocación. Cancelar y recargar conservan la compra. Deshacer restaura la distribución sin devolver dinero ni repetir XP. Hueco sugiere una posición con acceso, que el jugador debe confirmar.
+La ampliación modifica físicamente suelo, paredes y cuadrícula. Los clientes caminan entre obstáculos, visitan expositores, esperan atención, pagan y salen. El editor avisa de zonas inaccesibles.
+El pedido completo reserva sus unidades, visita los distintos expositores y cobra toda la cesta de forma atómica. Puede repetirse desde Actividad/mostrador.
+Desde nivel 8, una cuarta parte de los clientes intenta comprar un producto concreto, incluso agotado; los demás prefieren lo disponible.
+Los visitantes pueden compartir casillas mientras caminan: la cola asigna turnos y puestos, pero todavía no hay colisión entre personas.
 
-La tienda comprueba el acceso a productos, caja y almacén. El aviso permite localizar el objeto y abrir su edición; la previsualización muestra cómo afecta cada movimiento. Una distribución físicamente válida puede guardarse aunque bloquee el acceso. Sin recorrido completo hasta el producto, caja y salida, no hay compra.
+## Tiempo y guardado
+Partidas nuevas a ritmo ×4; Ajustes permite ×1, ×4 o ×12. Acelera clientes, entregas y salarios por igual, sin regalar progreso. Los tiempos se muestran en segundos de juego.
+Al ocultar/cerrar se pausa la simulación. Editar pausa visitas y salarios, mientras continúan entregas. Sin fondos para un salario, el refuerzo espera al siguiente pago posible.
+Un Cometa adelantado por el proveedor, con deuda de 15 a devolver en la siguiente venta, evita quedar sin forma de reponer cuando no queda stock, entrega ni saldo suficiente.
 
-Las nuevas visitas se intentan cada ocho segundos; el pago depende del recorrido real, con un mínimo de ocho segundos entre ventas. El stock se descuenta sólo en caja: si se agotó el producto elegido, el cliente sale sin comprar otro automáticamente. Editar interrumpe las visitas pendientes y las reinicia por la puerta al terminar; las entregas continúan.
+Se conserva localStorage aquariumShopV01. Las partidas antiguas migran preservando economía y colocaciones válidas. Esquema 6 y layout versión 2 guardan posiciones, orientación, compras pendientes, pedidos y empleados. El bonus offline provisional anterior se sustituye por pausa real.
 
-## Economía conservada
-500 monedas iniciales; Bettas 25/45, Cometas 15/30, comida 20/35 (compra/venta); pedidos de 30 segundos; niveles 1–10; estantería 250; tercer acuario 350; almacén 4.000 en nivel 8; capacidad 20→50. Se conserva localStorage aquariumShopV01 y el bonus offline provisional (máximo cuatro horas), independiente de la simulación de recorridos.
+## Desarrollo y pruebas
+Sin dependencias de producción ni compilación. GitHub Pages: main, raíz; recursos relativos versionados.
+Instala dependencias con npm install. Inicia npm run preview y, en otro terminal, npm test. Playwright utiliza Microsoft Edge.
+- model.test.cjs: catálogo, huellas, BFS, pendientes, migraciones y ampliación.
+- slice.test.cjs: partida nueva completa sin fijar saldo, nivel o XP; clientes físicos, pedidos, editor, contratación e inversión.
+- safeguards.test.cjs: idempotencia, reservas, capacidad, salarios, deshacer y accesos bloqueados.
 
-## Edición
-Cuadrícula de 12 × 12, dos orientaciones de suelo (0° y 90°), arrastre o flechas, confirmación y cancelación. Deshacer recupera hasta 30 cambios de la sesión. No se permite ocupar la entrada, superponer muebles ni salir de la sala. Las mejoras buscan espacio libre y evitan las casillas donde están caminando clientes.
-
-## Arquitectura y alcance
-Sin dependencias de producción ni compilación; rutas relativas compatibles con GitHub Pages desde main, raíz. layout-model.js define catálogo, habitaciones, huellas y migración; objects.js conserva el arte SVG; editor.js gestiona cambios; navigation.js calcula caminos y acceso; visitors.js ejecuta visitas; circulation-ui.js presenta avisos. economy.js mantiene precios, pedidos y progreso.
-
-Los visitantes son transitorios y no se guardan compras pendientes. La navegación está separada por habitación, preparada para ampliar destinos y añadir conexiones explícitas entre salas. Todavía no hay colas, satisfacción, popularidad, nuevas salas ni departamentos. Varios visitantes pueden compartir una casilla.
-
-## Pruebas
-Instala dependencias con npm install; ejecuta npm run preview y, en otro terminal, npm test. Playwright usa Microsoft Edge instalado.
-Las pruebas cubren rutas y obstáculos, ausencia de diagonales, orientación, inaccesibilidad y reapertura, posición real dibujada de clientes, compra después de mirar y llegar a caja, última unidad, editor, migraciones, economía, persistencia y anchos 320/390/768/1280.
+playthrough-v06.json recoge la prueba final: nivel 10 con 12.135 monedas; elección de Plantas I y saldo final 135. Pruebas responsive a 320/390/768/1280. El balance sigue pendiente de pruebas con jugadores.
