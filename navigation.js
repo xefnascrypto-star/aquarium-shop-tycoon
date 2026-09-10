@@ -46,15 +46,37 @@
   for(let y=b.y;y<b.y+b.depth;y++)cells.push({x:b.x+b.width,y});
   return cells.filter(c=>free(g,c)&&clear(g,{x:c.x+.5,y:c.y+.5}));
  }
+ function staffServices(g,o){
+ if(o.kind!=='counter')return services(g,o);
+ const b=M.footprint(o),cells=[];
+ for(let x=b.x;x<b.x+b.width;x++)cells.push({x,y:b.y-1});
+ for(let y=b.y;y<b.y+b.depth;y++)cells.push({x:b.x-1,y});
+ return cells.filter(c=>free(g,c)&&clear(g,{x:c.x+.5,y:c.y+.5}));
+ }
+ const stationCache=new WeakMap();
+ function stations(g,counter){
+ let cache=stationCache.get(g);if(!cache){cache=new Map();stationCache.set(g,cache)}if(cache.has(counter.id))return cache.get(counter.id);
+ const front=services(g,counter).filter(c=>route(g,g.entrance,[c]));
+ const back=staffServices(g,counter).filter(c=>route(g,g.entrance,[c]));
+ const result=back.slice(0,front.length).map((cell,i)=>({counterId:counter.id,cell,customer:front[i]}));cache.set(counter.id,result);return result;
+ }
+ function workPlan(g,o,counter,start){
+ const home=stations(g,counter)[0]?.cell;if(!home)return null;
+ const pickup=route(g,start||home,staffServices(g,o));if(!pickup)return null;
+ const back=route(g,pickup.at(-1),[home]);return back?{pickup,back}:null;
+ }
  function assess(graph){
-  const objects=[];
-  for(const g of Object.values(graph.grids)){
-   for(const o of g.objects.filter(o=>goods[o.kind]||['counter','warehouse'].includes(o.kind))){
-    const path=g.entrance?route(g,g.entrance,services(g,o)):null;
-    objects.push({id:o.id,kind:o.kind,roomId:o.roomId,label:M.catalog[o.kind].label,reachable:!!path,reason:path?'':'Sin camino desde la puerta hasta una cara de atención.'});
-   }
-  }
-  return objects;
+ const objects=[];
+ for(const g of Object.values(graph.grids)){
+ const counters=g.objects.filter(o=>o.kind==='counter');
+ for(const o of g.objects.filter(o=>goods[o.kind]||o.kind==='warehouse')){
+ const path=g.entrance?route(g,g.entrance,services(g,o)):null;
+ const staff=o.kind==='warehouse'?!!path:counters.some(c=>workPlan(g,o,c));
+ const reasonKey=!path?'accessCustomer':!staff?'accessStaff':'';
+ objects.push({id:o.id,kind:o.kind,roomId:o.roomId,label:M.catalog[o.kind].label,customerReachable:!!path,staffReachable:staff,reachable:!!path&&staff,reasonKey,reason:reasonKey==='accessCustomer'?'Sin camino para clientes.':reasonKey==='accessStaff'?'Sin recorrido de trabajo entre caja y expositor.':''});
+ }
+ }
+ return objects;
  }
  function plan(graph,product,roomId='main',start){
   const g=graph.grids[roomId];if(!g||!g.entrance)return null;
@@ -62,6 +84,7 @@
   for(const object of g.objects.filter(o=>goods[o.kind]?.includes(product))){
    const toProduct=route(g,origin,services(g,object));if(!toProduct)continue;
    for(const counter of counters){
+    if(!workPlan(g,object,counter))continue;
     const toCounter=route(g,toProduct.at(-1),services(g,counter));if(!toCounter)continue;
     const toExit=route(g,toCounter.at(-1),[g.entrance]);if(!toExit)continue;
     options.push({roomId,product,objectId:object.id,counterId:counter.id,toProduct,toCounter,toExit});
@@ -69,5 +92,5 @@
   }
   return options.sort((a,b)=>(a.toProduct.length+a.toCounter.length+a.toExit.length)-(b.toProduct.length+b.toCounter.length+b.toExit.length))[0]||null;
  }
- return {goods,key,build,free,clear,segmentClear,route,services,assess,plan};
+ return {goods,key,build,free,clear,segmentClear,route,services,staffServices,stations,workPlan,assess,plan};
 });

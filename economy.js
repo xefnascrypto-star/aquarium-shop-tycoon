@@ -1,6 +1,6 @@
 const products=ShopDesign.products;
 const $=id=>document.getElementById(id),fmt=n=>Math.floor(n).toLocaleString('es-ES');
-const initial=()=>({schema:6,identity:null,money:500,level:1,xp:0,served:0,capacity:20,pearls:0,stock:Object.fromEntries(Object.keys(products).map(k=>[k,({betta:5,comet:6,food:4,conditioner:3})[k]||0])),lastSeen:Date.now(),ordersVersion:1,orders:[],orderSerial:0,restocked:0,supplier:'local',supplierReceived:{local:0,wholesale:0},sold:{},placementRewarded:{},lost:0,potential:0,kits:0,kitRequested:false,groupSales:0,wageElapsed:0,wagesPaid:0,employee:null,speed:4,debt:0,investment:null});
+const initial=()=>({schema:6,serviceSession:null,identity:null,money:500,level:1,xp:0,served:0,capacity:20,pearls:0,stock:Object.fromEntries(Object.keys(products).map(k=>[k,({betta:5,comet:6,food:4,conditioner:3})[k]||0])),lastSeen:Date.now(),ordersVersion:1,orders:[],orderSerial:0,restocked:0,supplier:'local',supplierReceived:{local:0,wholesale:0},sold:{},placementRewarded:{},lost:0,potential:0,kits:0,kitRequested:false,groupSales:0,wageElapsed:0,wagesPaid:0,employee:null,speed:4,debt:0,investment:null});
 let state=initial(),resetting=false;
 function unlocked(k){const p=products[k];return !!p&&state.level>=p.level&&(!p.investment||state[p.investment])}
 function used(){return Object.entries(state.stock).reduce((a,[k,v])=>a+v*(products[k]?.vol||0),0)}
@@ -28,7 +28,7 @@ function loseSale(reason){state.lost++;log('Compra perdida: '+reason,'warn',fals
 function sellBasket(basket,options={}){
 const entries=Object.entries(basket),isKit=state.kitRequested&&entries.length===Object.keys(ShopDesign.kit).length&&entries.every(([k,q])=>ShopDesign.kit[k]===q);
 if(options.requestId&&!window.ShopMoments?.valid(options.requestId))return null;
-if(!entries.length||entries.some(([k,q])=>!unlocked(k)||!Number.isInteger(q)||q<1||(state.stock[k]||0)<q||((state.stock[k]-q)<((state.kitRequested&&!isKit?(ShopDesign.kit[k]||0):0)+(window.ShopMoments?.reserved(k,options.requestId)||0)))))return null;
+if(!entries.length||entries.some(([k,q])=>!unlocked(k)||!Number.isInteger(q)||q<1||(state.stock[k]||0)<q||((state.stock[k]-q)<((state.kitRequested&&!isKit?(ShopDesign.kit[k]||0):0)+(window.ShopMoments?.reserved(k,options.requestId)||0)+(window.ShopStaff?.reserved(k,options.visitorId)||0)))))return null;
 let amount=0;for(const [k,q] of entries){state.stock[k]-=q;amount+=products[k].sell*q;state.sold[k]=(state.sold[k]||0)+q}
 const repayment=Math.min(state.debt,amount);state.debt-=repayment;state.money+=amount-repayment;state.served++;state.xp+=entries.reduce((n,[k,q])=>n+10*q,0);
 if(isKit){state.kits++;state.kitRequested=false}if(entries.some(([k,q])=>['neon','molly','cory','ancistrus'].includes(k)&&q>1))state.groupSales++;
@@ -82,7 +82,7 @@ if(u.kind)shopEditor.begin(state.layout.objects.find(o=>o.kind===u.kind).id);
 function upgradeShelf(){buyUpgrade('shelf')}function upgradeTank(){buyUpgrade('tank3')}function upgradeWarehouse(){buyUpgrade('warehouse')}
 function hire(id){if(state.level<9||state.employee||!ShopDesign.employees[id])return;if(state.money<1500)return log('Necesitas 1.500 monedas','warn');state.money-=1500;state.employee=id;state.wageElapsed=0;state.xp+=30;log(ShopDesign.employees[id].name+' se incorpora al equipo','good');recalcLevel();render();saveGame(false)}
 function rescue(){if(incomingOrders().length||state.debt||state.money>=15||Object.entries(state.stock).some(([k,q])=>unlocked(k)&&q>0))return;state.stock.comet=1;state.debt=15;log('El proveedor te adelanta un Cometa. Devolverás 15 monedas al venderlo.');render();saveGame(false)}
-function saveGame(show=true){if(resetting||!state.identity)return;state.lastSeen=Date.now();try{localStorage.setItem('aquariumShopV01',JSON.stringify(state))}catch(e){if(show)log('No se ha podido guardar','warn');return}if(show)log('Partida guardada','good')}
+function saveGame(show=true){if(resetting||!state.identity||window.shopCirculation?.settling)return;if(window.shopCirculation?.serialize)state.serviceSession=shopCirculation.serialize();state.lastSeen=Date.now();try{localStorage.setItem('aquariumShopV01',JSON.stringify(state))}catch(e){if(show)log('No se ha podido guardar','warn');return}if(show)log('Partida guardada','good')}
 function load(){try{const raw=localStorage.getItem('aquariumShopV01');if(!raw)return;const old=JSON.parse(raw);state={...initial(),...old,stock:{...initial().stock,...old.stock},sold:old.sold||{},supplierReceived:{local:0,wholesale:0,...old.supplierReceived}};
 state.identity=ShopIdentity.normalize(old.identity);
 if(old.schema!==6){state.schema=6;state.xp=Math.max(0,state.served*10);state.shelf=true;state.speed=1;state.supplierReceived.local=old.restocked||0;state.stock.conditioner=3}

@@ -1,4 +1,4 @@
-# Arquitectura v0.8.1
+# Arquitectura v0.9
 design.js centraliza productos, precios, perfiles y definiciones de niveles 1–10. requirements combina XP, ventas e hitos; recalcLevel sólo avanza. placementRewarded impide obtener XP repetidamente con Deshacer.
 
 layout-model.js separa catálogo e instancias (id, kind, roomId, x, y, rotation, placed). purchased representa propiedad; owned sólo incluye objetos colocados. Migración acepta layouts 1, 2 y 3, conserva posiciones válidas y deja pendientes los muebles que no caben. La geometría deriva de expansion, no de dimensiones arbitrarias guardadas.
@@ -9,7 +9,7 @@ navigation.js construye obstáculos de huellas colocadas y calcula A* de cuatro 
 
 economy.js valida desbloqueo, saldo, cantidad y volumen antes de descontar. Los pedidos en tránsito reservan su volumen, evitando sobreventa de espacio sin limitar la concurrencia. sellBasket comprueba toda la cesta antes de modificarla; los productos del conjunto aceptado quedan reservados. El anticipo sólo existe sin stock, entrega, saldo suficiente ni deuda previa.
 
-El reloj usa speed compartido para clientes, entregas y salarios. Los visitantes subdividen pasos para conservar colisiones a ×12. No se acumulan ingresos al cerrar u ocultar. Entregas y salarios guardan tiempo restante; visitantes y colas son transitorios.
+El reloj usa speed compartido para clientes, entregas y salarios. Los visitantes subdividen pasos para conservar colisiones a ×12. No se acumulan ingresos al cerrar u ocultar. Entregas y salarios guardan tiempo restante; desde v0.9 se guarda también la sesión física de visitas y empleados.
 
 El catálogo conserva roomId y tipos de futuras habitaciones. Las conexiones entre departamentos requerirán portales explícitos. No hay niveles 11–80, marketing, satisfacción ni monetización implementados.
 
@@ -37,3 +37,12 @@ orderReason es compartido por la interfaz y la compra: valida producto, proveedo
 advance resta el mismo dt a cada pedido activo. Los vencidos pasan a delivered antes de aplicar efectos; deliveryTick acredita stock, recepción por proveedor y XP una vez, emite deliveryreceived con cada registro y guarda el lote atómicamente en localStorage. Se conservan hasta 50 entregas terminadas para diagnóstico y todos los pedidos activos, sin límite.
 remaining es autoritativo y se conserva al cerrar. orderedAt/deliveredAt son fechas de la sesión; no se usa una hora de llegada de pared para consumir progreso offline. migrate convierte el pedido legacy sólo si no existe el nuevo array; un coste histórico ausente queda null, no se inventa ni se cobra.
 space/reserved encapsulan capacidad: hoy únicamente volumen de almacén. La futura capacidad de stock vivo deberá añadirse como otro recurso, no restar plazas ficticias del almacén.
+
+## Tareas físicas v0.9
+staff.js encapsula perfiles de empleado (velocidad, preparación y caja), disponibilidad y estados de trabajo. La cola de solicitudes vive en visitors con ticket persistido; staff asigna FIFO a empleados libres. Cada trabajador mantiene un job = ID de cliente y recorre todos los stops del encargo antes de transportar y cobrar. No hay temporizador de viaje ficticio: cada segmento pasa por ShopMotion.travel y la cuadrícula real.
+navigation.staffServices usa las caras norte/oeste del mostrador y las caras de atención del expositor. stations empareja puntos de empleado y cliente distintos; workPlan exige ida y vuelta. stations se almacena en una WeakMap por grafo inmutable y desaparece al reconstruir la distribución. assess ofrece customerReachable y staffReachable y el editor usa ese mismo resultado.
+El cliente deja libre su punto de atención al solicitar ayuda. Su pago sólo avanza cuando el empleado asignado ha llegado físicamente a su estación y ambos están en caja. El empleado puede terminar su encargo en curso si falta dinero para el salario, pero no recibe nuevos encargos hasta el siguiente pago válido.
+ShopStaff.reserved contabiliza cestas ordinarias asignadas. Las reservas globales de kits y encargos de moments se excluyen para no contarlas dos veces. sellBasket acepta visitorId y comprueba reservas ajenas antes de aplicar la venta atómica.
+serviceSession.version=1 guarda firma de distribución, empleado contratado, seriales, cola, apariciones, actores y trabajadores sin nodos DOM. Se valida geometría, trayectos, identidades de tarea y enlaces cliente-empleado antes de restaurar. Las semillas visuales se conservan para no cambiar de apariencia al recargar. Si la firma no coincide, se inicia una sesión física nueva sin tocar inventario, dinero o envíos.
+El cobro se protege con shopCirculation.settling: los guardados intermedios disparados por eventos se omiten y se guarda después de marcar al cliente como pagado y liberar al empleado. Así no puede persistirse saldo cobrado junto a una tarea todavía pendiente de cobrar.
+El editor elimina visitas y trabajos antes de modificar huellas. Los cambios de propiedad o contratación pueden redibujar muebles, pero los nodos de empleados se reinsertan por profundidad en el siguiente fotograma. Perfiles y fases están separados del renderizador; ampliar plantillas, capacidades y criterios de elegibilidad no requiere cambiar el motor económico.

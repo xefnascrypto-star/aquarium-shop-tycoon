@@ -1,0 +1,23 @@
+{
+  "near": {
+    "sales": 1,
+    "elapsed": 18.9,
+    "distance": 8.040247008338563,
+    "crossed": false
+  },
+  "far": {
+    "sales": 1,
+    "elapsed": 22.1,
+    "distance": 13.688741025015696,
+    "crossed": false
+  },
+  "narrow": {
+    "sales": 1,
+    "elapsed": 22.2,
+    "distance": 16.191999999999993,
+    "crossed": true
+  },
+  "blockedAndReopened": true,
+  "noDoublePaymentAfterReload": true,
+  "errors": []
+}

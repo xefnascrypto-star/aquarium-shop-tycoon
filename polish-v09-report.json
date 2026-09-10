@@ -1,0 +1,44 @@
+{
+  "layouts": [
+    {
+      "name": "rows",
+      "updates": 38502,
+      "sales": 11,
+      "visited": {
+        "comet": true,
+        "betta": true,
+        "tank3": true,
+        "counter": true
+      }
+    },
+    {
+      "name": "rotated",
+      "updates": 38502,
+      "sales": 12,
+      "visited": {
+        "comet": true,
+        "betta": true,
+        "tank3": true,
+        "counter": true
+      }
+    },
+    {
+      "name": "island",
+      "updates": 38445,
+      "sales": 11,
+      "visited": {
+        "comet": true,
+        "betta": true,
+        "tank3": true,
+        "counter": true
+      }
+    },
+    {
+      "name": "blocked",
+      "updates": 3455,
+      "sales": 0,
+      "visited": {}
+    }
+  ],
+  "checks": "Every rendered frame: radius clearance, speed bound, product interaction and front occlusion. Three layouts, blocked/reopened route, save migration and mobile editor. PASS"
+}

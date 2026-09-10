@@ -10,10 +10,13 @@
   "phases": [
     "to-product",
     "browsing",
-    "to-queue",
     "to-counter",
     "checkout",
+    "service-queue",
     "leaving",
+    "staff-working",
+    "entering",
+    "to-wait",
     "turning"
   ],
   "bag": true,

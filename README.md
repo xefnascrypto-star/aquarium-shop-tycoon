@@ -1,4 +1,4 @@
-# Aquarium Shop Tycoon · v0.8.1
+# Aquarium Shop Tycoon · v0.9
 Demo cozy/isométrica de niveles 1–10. Jugar: https://xefnascrypto-star.github.io/aquarium-shop-tycoon/
 
 ## Recorrido jugable
@@ -25,7 +25,7 @@ Los visitantes pueden compartir casillas mientras caminan: la cola asigna turnos
 
 ## Tiempo y guardado
 Partidas nuevas a ritmo ×4; Ajustes permite ×1, ×4 o ×12. Acelera clientes, entregas y salarios por igual, sin regalar progreso. Los tiempos se muestran en segundos de juego.
-Al ocultar/cerrar se pausa la simulación. Editar pausa visitas y salarios, mientras continúan entregas. Sin fondos para un salario, el refuerzo espera al siguiente pago posible.
+Al ocultar/cerrar se pausa la simulación. Editar pausa visitas y salarios, mientras continúan entregas. Sin fondos para un salario, el refuerzo termina el encargo iniciado y no acepta otro hasta poder cobrar.
 Un Cometa adelantado por el proveedor, con deuda de 15 a devolver en la siguiente venta, evita quedar sin forma de reponer cuando no queda stock, entrega ni saldo suficiente.
 
 Se conserva localStorage aquariumShopV01. Las partidas antiguas migran preservando economía y colocaciones válidas. Esquema 6 y layout versión 3 guardan posiciones, orientación, compras pendientes, pedidos y empleados. El bonus offline provisional anterior se sustituye por pausa real.
@@ -70,3 +70,12 @@ Se mantienen precios, descuentos, mínimos, cantidades seleccionables y plazos: 
 El espacio disponible es capacidad menos stock recibido menos volumen reservado por todos los pedidos en tránsito. Recibir mercancía transforma reserva en stock; no libera espacio ficticio. Los peces siguen teniendo volumen de almacén cero, porque v0.8 no tiene todavía otro límite de stock vivo.
 Se guarda cada pedido con ID, producto, cantidad, coste, proveedor, instante de solicitud, duración, tiempo restante, estado e instante efectivo de entrega. El tiempo de juego permanece pausado al cerrar u ocultar la página. Un pedido único de v0.8 se migra sin cobrar otra vez y conserva su tiempo restante; si no guardaba coste, se muestra como desconocido.
 orders-model.test.cjs comprueba temporizadores 30/30/45/60, reglas por producto, reserva y ausencia de límite de pedidos activos. orders.test.cjs comprueba seis pedidos desde la interfaz, bloqueo por capacidad, proveedores con plazos distintos, recarga, reapertura al día siguiente, migración y ausencia de doble entrega. orders-v081-report.json y playthrough-v081.json recogen las pruebas de esta actualización.
+
+## Empleados físicos v0.9
+El cliente mira el expositor, pide ayuda y se aparta para dejar sitio. Un empleado libre toma el encargo, camina al punto de trabajo, prepara el pez (2,2 segundos de juego) o producto seco (0,9 s), transporta una bolsa con agua/pez o una caja y atiende el cobro. Se conservan los tiempos de caja existentes: 6 s inicial, 3,5 s Eva y 5 s Nico. El desplazamiento se suma de verdad al servicio.
+La cola asigna por orden de solicitud y un empleado mantiene un único encargo principal hasta finalizar. Dos empleados pueden recoger y cobrar pedidos distintos al mismo tiempo. El stock de encargos ordinarios en preparación queda reservado; no se descuenta ni cobra hasta terminar la venta. Los conjuntos y encargos especiales conservan sus reservas existentes.
+La parte trasera/lateral interior del mostrador es para empleados; las caras frontales son para clientes. En el editor, los puntos azules indican atención al cliente y los puntos ámbar, trabajo del empleado. Un expositor necesita un recorrido completo de trabajo desde la caja, además del acceso del cliente. Si queda inaccesible, el editor avisa y allí no se completa una venta.
+Clientes y empleados usan la misma cuadrícula, radio físico de 0,28 y movimiento continuo. Una tienda con acuarios alejados obliga a caminar más. Las personas pueden cruzarse entre sí: todavía no hay colisiones dinámicas entre personajes.
+La partida guarda posiciones, trayectos, preparación restante, cola y encargos asignados. Al recargar se reanuda el servicio sin repetir cobros. Al entrar en el editor se liberan las reservas de trabajo y se retiran visitas sin cobrar, como antes; al salir se reconstruyen recorridos. Un guardado incompatible o dañado descarta sólo la sesión física, conservando stock, dinero y pedidos.
+El renderizador mantiene el estilo vectorial cozy; el uniforme utiliza la identidad de la tienda. Los bocadillos de empleados se limitan a preparación/caja. No se añaden niveles, salarios, precios ni departamentos nuevos. La arquitectura separa perfiles, asignación, locomoción y dibujo para futuras habilidades, especialidades, descansos y más puestos.
+staff.test.cjs comprueba uno/dos empleados, trabajos simultáneos, tres distribuciones y guardado durante preparación, transporte y cobro. staff-edge.test.cjs comprueba distancia, pasillo de una casilla, bloqueo/reapertura y ausencia de doble pago. Los informes están en staff-v09-report.json y staff-distance-v09-report.json. La prueba completa de progresión genera playthrough-v09.json.

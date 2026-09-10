@@ -16,7 +16,7 @@ const identity=await p.evaluate(()=>state.identity);
 assert.deepEqual(identity,{version:1,name:'La Casa del Betta',color:'ocean',icon:'betta',shape:'soft',locale:'es'});
 assert.equal(await p.locator('.heading h1').textContent(),identity.name);
 assert.ok((await p.locator('#shopSign').textContent()).includes(identity.name));
-assert.ok(await p.locator('.shop-clerk .brand-badge').count());
+assert.ok(await p.locator('.live-worker .brand-badge').count());
 await p.reload();assert.deepEqual(await p.evaluate(()=>state.identity),identity);assert.equal(await p.locator('#shopCreation').count(),0);
 const phases=new Set();let bag=false;for(let i=0;i<90;i++){await p.clock.runFor(500);for(const a of await p.evaluate(()=>shopCirculation.snapshot()))phases.add(a.phase);if(await p.locator('.live-visitor[data-result="sale"] .purchase-bag').count()){assert.equal(await p.locator('.live-visitor[data-result="sale"] .purchase-bag').first().isVisible(),true);bag=true}}
 assert.ok(bag,'physical purchase produces a bag');assert.ok(phases.has('browsing')&&phases.has('checkout')&&phases.has('leaving'));assert.ok(await p.evaluate(()=>state.served>0));

@@ -16,10 +16,11 @@
    const room=current().rooms.find(r=>r.id===draft.roomId),b=M.footprint(draft),p=[[b.x,b.y],[b.x+b.width,b.y],[b.x+b.width,b.y+b.depth],[b.x,b.y+b.depth]].map(([x,y])=>{const pt=M.project(room,x,y);return pt.x+','+pt.y}).join(' ');
    const invalid=M.validate(current(),draft,state);
    $('placementLayer').innerHTML='<polygon points="'+p+'" fill="'+(invalid?'#dc795855':'#76b99444')+'" stroke="'+(invalid?'#b34831':'#367d60')+'" stroke-width="3"/>';
-   $('editHelp').textContent=invalid||'Arrastra o toca una casilla. Giro: '+draft.rotation+'°. Puntos azules: atención. Confirma para guardar.';
+   $('editHelp').textContent=invalid||ShopI18n.t('editStaffPoints',{rotation:draft.rotation});
    $('editConfirm').disabled=!!invalid;
    const graph=ShopNavigation.build(working(),state),g=graph.grids[draft.roomId];
    $('placementLayer').innerHTML+=ShopNavigation.services(g,draft).map(c=>{const p=M.project(room,c.x+.5,c.y+.5);return '<ellipse cx="'+p.x+'" cy="'+p.y+'" rx="8" ry="4" fill="#558ea1" stroke="#effaf3" stroke-width="2"/>'}).join('');
+   $('placementLayer').innerHTML+=ShopNavigation.staffServices(g,draft).map(c=>{const p=M.project(room,c.x+.5,c.y+.5);return '<circle cx="'+p.x+'" cy="'+(p.y-2)+'" r="3" fill="#b48536"/>'}).join('');
    const node=world.querySelector('[data-instance="'+draft.id+'"]');if(node)node.classList.add('selected-object');
   }else{$('editHelp').textContent='Selecciona un objeto. Las ventas están en pausa.';$('editConfirm').disabled=true}
   for(const id of ['editRotate','editCancel','editSuggest'])$(id).disabled=!draft;

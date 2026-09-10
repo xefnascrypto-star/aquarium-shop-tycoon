@@ -8,8 +8,8 @@ const w=[13,16,19][p.body],hair=p.hair===0?'M-14-60Q-22-87 0-86Q20-85 14-64L7-74
 return '<ellipse cy="3" rx="19" ry="8" fill="#52776325"/><g class="character-leg left-leg"><path d="M-7-19L-8-3" stroke="#485965" stroke-width="8" stroke-linecap="round"/><path d="M-11-2H-4" stroke="#394c53" stroke-width="5" stroke-linecap="round"/></g><g class="character-leg right-leg"><path d="M7-19L8-3" stroke="#485965" stroke-width="8" stroke-linecap="round"/><path d="M5-2H12" stroke="#394c53" stroke-width="5" stroke-linecap="round"/></g><path d="M-'+w+'-42Q0-53 '+w+'-42L'+(p.skirt?w+3:w-3)+'-'+(p.skirt?12:17)+'Q0-9 -'+(p.skirt?w+3:w-3)+'-'+(p.skirt?12:17)+'Z" fill="'+p.color+'"/><path d="M-6-45Q0-37 6-45" fill="none" stroke="#f5e7c9" stroke-width="2"/><path class="character-arm" d="M-'+w+'-39L-'+(w+4)+'-25M'+w+'-39L'+(w+4)+'-25" stroke="'+p.skin+'" stroke-width="7" stroke-linecap="round" fill="none"/><g class="character-head"><rect x="-5" y="-53" width="10" height="12" rx="3" fill="'+p.skin+'"/><ellipse cy="-64" rx="14" ry="17" fill="'+p.skin+'"/><path d="'+hair+'" fill="'+p.hairColor+'"/><circle cx="6" cy="-63" r="1.5" fill="#4c4e4a"/>'+(p.glasses?'<path d="M0-64H12V-59H1Z" fill="none" stroke="#574e49" stroke-width="1.5"/>':'')+'</g>';
 }
 return {profile,
-create({id}){
- const p=profile(Number(id)+appearanceOffset),node=document.createElementNS('http://www.w3.org/2000/svg','g');node.classList.add('live-visitor');node.dataset.visitorId=id;node.dataset.profile=JSON.stringify(p);node.setAttribute('role','button');node.setAttribute('tabindex','0');
+create({id,seed}){
+ const visualSeed=Number.isInteger(seed)&&seed>=0?seed:Number(id)+appearanceOffset,p=profile(visualSeed),node=document.createElementNS('http://www.w3.org/2000/svg','g');node.classList.add('live-visitor');node.dataset.visitorId=id;node.dataset.seed=visualSeed;node.dataset.profile=JSON.stringify(p);node.setAttribute('role','button');node.setAttribute('tabindex','0');
  node.innerHTML='<g class="character-body"><g class="character-model" transform="scale('+(p.young?.93:1)+' '+(p.young?.94:1)+')">'+art(p)+'<g class="purchase-bag" transform="translate(17 -28)" style="display:none"><path d="M1 0V-5Q8-14 15-5V0" fill="none" stroke="#ad956e" stroke-width="2"/><path d="M-2-1H18L20 24H-3Z" fill="#f2dfb6"/><g><svg class="brand-badge" x="1" y="3" width="15" height="15" viewBox="0 0 64 64">'+ShopIdentity.mark().replace(/^<svg[^>]*>|<\/svg>$/g,'')+'</svg></g></g></g></g><g class="visitor-bubble" transform="translate(-55 -117)"><rect width="110" height="27" rx="10"/><text x="55" y="18" text-anchor="middle"></text></g>';
  return node;
 },
@@ -21,7 +21,7 @@ update(node,{feet,phase,moving,distance,facing,bubble,label,result}){
  node.querySelector('.character-head').setAttribute('transform',phase==='browsing'?'rotate(7 0 -49)':phase==='checkout'?'rotate(4 0 -49)':'');
  node.querySelector('.character-arm').setAttribute('transform',phase==='checkout'?'rotate(-12 0 -39)':'');
  node.querySelector('.purchase-bag').style.display=result==='sale'?'':'none';
- node.querySelector('.visitor-bubble text').textContent=bubble;
+ node.querySelector('.visitor-bubble').style.display=bubble?'':'none';node.querySelector('.visitor-bubble text').textContent=bubble;
 },
 remove(node){node.remove()}
 };

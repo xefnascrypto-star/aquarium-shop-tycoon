@@ -1,0 +1,17 @@
+{
+  "url": "https://xefnascrypto-star.github.io/aquarium-shop-tycoon/?verify=v081-1788983684289",
+  "title": "Aquarium Shop Tycoon · v0.8.1",
+  "identity": {
+    "version": 1,
+    "name": "Océano de Barrio",
+    "color": "ocean",
+    "icon": "wave",
+    "shape": "circle",
+    "locale": "es"
+  },
+  "layout": 3,
+  "editor": true,
+  "reload": true,
+  "errors": [],
+  "failed": []
+}
