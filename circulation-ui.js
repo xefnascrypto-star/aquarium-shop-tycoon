@@ -1,6 +1,8 @@
 // Accessible-object warnings use exactly the same grid as visitor movement.
 function updateAccessibility(layout,preview=false){
- const report=ShopNavigation.assess(ShopNavigation.build(layout,state)),missing=report.filter(o=>!o.reachable);
+ const graph=ShopNavigation.build(layout,state),report=ShopNavigation.assess(graph);
+ if(window.ShopLogistics)for(const entry of report){const g=graph.grids[entry.roomId],o=g.objects.find(o=>o.id===entry.id);if(entry.reachable&&!ShopLogistics.reachable(g,o)){entry.reachable=false;entry.reasonKey='accessRestock'}}
+ const missing=report.filter(o=>!o.reachable);
  const alert=$('accessAlert');alert.hidden=!missing.length;alert.textContent=missing.length+' '+(missing.length===1?'zona sin acceso':'zonas sin acceso')+' · revisar';
  $('editAccess').textContent=missing.length?ShopI18n.t('accessMissing',{objects:missing.map(o=>o.label).join(', ')}):ShopI18n.t('accessGood');
  $('editAccess').classList.toggle('access-warning',!!missing.length);

@@ -78,10 +78,10 @@
  }
  return objects;
  }
- function plan(graph,product,roomId='main',start){
+ function plan(graph,product,roomId='main',start,displayIds){
   const g=graph.grids[roomId];if(!g||!g.entrance)return null;
   const origin=start||g.entrance,counters=g.objects.filter(o=>o.kind==='counter'),options=[];
-  for(const object of g.objects.filter(o=>goods[o.kind]?.includes(product))){
+  for(const object of g.objects.filter(o=>goods[o.kind]?.includes(product)&&(!displayIds||displayIds.includes(o.id)))){
    const toProduct=route(g,origin,services(g,object));if(!toProduct)continue;
    for(const counter of counters){
     if(!workPlan(g,object,counter))continue;

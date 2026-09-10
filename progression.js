@@ -17,6 +17,7 @@ updateShopStatus();
 function updateShopStatus(){
 const orders=incomingOrders(),next=orders.reduce((best,o)=>!best||o.remaining<best.remaining?o:best,null),status=$('shopStatus'),t=(key,params)=>ShopI18n.t(key,params);let message='';
 if(next)message='▤ '+t('ordersSummary',{count:orders.length,seconds:Math.ceil(next.remaining/1000)});
+else if(window.ShopLogistics&&Object.keys(products).some(k=>ShopLogistics.stored(k)>0))message='En recepción: '+Object.keys(products).reduce((n,k)=>n+ShopLogistics.stored(k),0)+' · reposición automática';
 else {const empty=Object.keys(products).filter(k=>unlocked(k)&&state.stock[k]===0);if(empty.length)message='Reponer '+empty.length+' productos'+(state.level>=8?' · '+state.lost+' compras perdidas':'')}
 status.hidden=!message;status.textContent=message;
 $('incomingTitle').textContent=t('ordersTitle');

@@ -1,0 +1,22 @@
+{
+  "url": "http://127.0.0.1:4174/",
+  "title": "Aquarium Shop Tycoon · v0.10",
+  "physicalStaff": true,
+  "physicalRestock": true,
+  "transferRestored": true,
+  "noDuplicateStock": true,
+  "staffDistance": 35.620617520845954,
+  "supplierOrders": true,
+  "identity": {
+    "version": 1,
+    "name": "Océano de Barrio",
+    "color": "ocean",
+    "icon": "wave",
+    "shape": "circle",
+    "locale": "es"
+  },
+  "editor": true,
+  "serviceRestored": true,
+  "errors": [],
+  "failed": []
+}

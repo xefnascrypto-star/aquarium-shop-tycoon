@@ -7,9 +7,10 @@ function refresh(){const next=JSON.stringify([state.layout,Object.keys(ShopDesig
 function status(a){return ({entering:'Entra por la puerta.','to-product':'Busca '+(products[a.product]?.name||'su pedido')+'.',browsing:'Mira '+products[a.product]?.name+'.','to-queue':'Se acerca a la cola.',queue:'Espera su turno en caja.','to-counter':'Le toca: va a su puesto de caja.',checkout:'Su empleado prepara el cobro.','to-wait':ShopI18n.t('staffWaiting'),'service-queue':ShopI18n.t('staffWaiting'),'staff-working':ShopI18n.t('staffServing'),leaving:a.result?'Sale con '+a.result.name+' · '+a.result.amount+' monedas.':'Sale sin comprar. '+(a.reason||''),turning:a.reason,waiting:'Salida bloqueada. Abre un paso en el editor.'})[a.phase]||'Visita terminada.'}
 function details(){$('visitorSummary').textContent=actors.length+' visitantes · '+actors.filter(a=>['service-queue','staff-working'].includes(a.phase)).length+' en cola · '+(state.employee&&!state.employeeUnpaid?2:1)+' puestos de caja.';if(selected)$('visitorInfo').textContent=actors.includes(selected)?status(selected):'La visita ha terminado.'}
 function hasStock(basket){return Object.entries(basket).every(([k,q])=>state.stock[k]>=q)}
-function available(a){return Object.entries(a.basket).every(([k,q])=>state.stock[k]-(state.kitRequested&&!a.kit?(ShopDesign.kit[k]||0):0)-(window.ShopMoments?.reserved(k,a.requestId)||0)-ShopStaff.reserved(k,a.id)>=q)}
+function locations(a){return Object.fromEntries(Object.keys(a.basket).map(k=>[k,a.stops.find(s=>N.goods[object(a,s.objectId)?.kind]?.includes(k))?.objectId]))}
+function available(a){const bins=locations(a);if(Object.entries(a.basket).some(([k,q])=>ShopLogistics.at(bins[k],k)-ShopStaff.reserved(k,a.id,bins[k])<q))return false;return Object.entries(a.basket).every(([k,q])=>ShopLogistics.exposed(k)-(state.kitRequested&&!a.kit?(ShopDesign.kit[k]||0):0)-(window.ShopMoments?.reserved(k,a.requestId)||0)-ShopStaff.reserved(k,a.id)>=q)}
 function itinerary(basket){let start=graph.grids.main.entrance;const stops=[];let counterId;
-for(const k of Object.keys(basket)){const p=N.plan(graph,k,'main',start);if(!p)return null;counterId=p.counterId;if(!stops.some(s=>s.objectId===p.objectId))stops.push({objectId:p.objectId,product:k});start=p.toProduct.at(-1)}
+for(const k of Object.keys(basket)){const p=ShopLogistics.plan(graph,k,'main',start,basket[k]);if(!p)return null;counterId=p.counterId;if(!stops.some(s=>s.objectId===p.objectId))stops.push({objectId:p.objectId,product:k});start=p.toProduct.at(-1)}
 return {stops,counterId};
 }
 function spawn(){
@@ -77,19 +78,20 @@ else if(a.phase==='browsing'){if(!hasStock(a.basket)){fail(a,'El producto se ha 
 else if(a.phase==='checkout'){const c=object(a,a.counterId);if(!c||!N.services(grid(a),c).some(p=>N.key(p)===N.key(a.cell))){fail(a,'La caja ya no es accesible.');return}if(a.paid)return;
 const p=M.project(grid(a).room,a.position.x,a.position.y);$('saleEffect').setAttribute('transform','translate('+p.x+' '+(p.y-80)+')');
 settling=true;
-try{a.result=sellBasket(a.basket,{requestId:a.requestId,visitorId:a.id});if(a.result){a.paid=true;ShopStaff.complete(a.id);a.server=null;walk(a,'leaving')}else fail(a,ShopI18n.t('staffNoStock'))}finally{settling=false;saveGame(false)}
+try{a.result=sellBasket(a.basket,{requestId:a.requestId,visitorId:a.id,locations:locations(a)});if(a.result){a.paid=true;ShopStaff.complete(a.id);a.server=null;walk(a,'leaving')}else fail(a,ShopI18n.t('staffNoStock'))}finally{settling=false;saveGame(false)}
 }else if(a.phase==='turning')walk(a,'leaving');
 }
 function draw(){
 for(const a of actors){
  const feet=M.project(grid(a).room,a.position.x,a.position.y);
- const t=(key,params)=>ShopI18n.t(key,params),bubble=({entering:a.requestId?t('order'):a.kit?t('aquarium'):a.specific?t('seeking',{name:products[a.product]?.name}):t('hello'),'to-product':a.specific?t('seeking',{name:products[a.product]?.name}):t('look'),browsing:a.kit?t('set'):products[a.product]?.name,'to-queue':t(state.level>=9?'queue':'till'),queue:t(state.level>=9?'turn':'pay'),'to-counter':t('myTurn'),'service-queue':a.waitTime<2?t('staffWaiting'):'','staff-working':'','to-wait':'',checkout:'',leaving:t(a.result?'thanks':'bye'),turning:t('later'),waiting:t('blocked')})[a.phase]||'';
+ const t=(key,params)=>ShopI18n.t(key,params),normalBubble=({entering:a.requestId?t('order'):a.kit?t('aquarium'):a.specific?t('seeking',{name:products[a.product]?.name}):t('hello'),'to-product':a.specific?t('seeking',{name:products[a.product]?.name}):t('look'),browsing:a.kit?t('set'):products[a.product]?.name,'to-queue':t(state.level>=9?'queue':'till'),queue:t(state.level>=9?'turn':'pay'),'to-counter':t('myTurn'),'service-queue':a.waitTime<2?t('staffWaiting'):'','staff-working':'','to-wait':'',checkout:'',leaving:t(a.result?'thanks':'bye'),turning:t('later'),waiting:t('blocked')})[a.phase]||'';
+ const bubble=(a.phase==='entering'&&(a.specific||a.requestId)||a.phase==='turning')?normalBubble:'';
  Characters.update(a.node,{feet,phase:a.phase,moving:!!a.path,distance:a.distance,facing:a.facing,bubble,label:a.name+': '+status(a),result:a.result?'sale':a.lost?'empty':'pending'});
 }
 
 const layer=$('furnitureLayer'),items=[...layer.querySelectorAll(':scope > [data-instance]')].map(node=>{const o=state.layout.objects.find(o=>o.id===node.dataset.instance);return {node,bounds:M.footprint(o)}});
 items.push(...actors.map(a=>({node:a.node,bounds:{x:a.position.x-.28,y:a.position.y-.28,width:.56,depth:.56}})));
-items.push(...ShopStaff.draw());
+items.push(...ShopStaff.draw());ShopLogistics.draw();
 for(const item of ShopDepth.sort(items))layer.append(item.node);details();
 }
 function tick(){const now=Date.now();let dt=Math.min(.1,Math.max(0,(now-lastFrame)/1000))*state.speed;lastFrame=now;if(paused||document.hidden||!state.identity||ShopIdentity.editing)return;refresh();
@@ -100,7 +102,7 @@ $('visitorStock').onclick=()=>showPanel('stock');
 window.shopCirculation={get settling(){return settling},serialize,
 occupied(){return ShopStaff.occupied().concat(actors.flatMap(a=>[a.cell,...(a.path?.slice(0,2)||[])].map(c=>({...c,roomId:a.roomId}))))},snapshot(){return actors.map(a=>({id:a.id,phase:a.phase,distance:a.distance,interaction:!!a.objectId&&N.services(grid(a),object(a,a.objectId)||{kind:'plant',x:-99,y:-99,rotation:0}).some(c=>N.key(c)===N.key(a.cell)),cell:{...a.cell},position:{...a.position},product:a.product,objectId:a.objectId,counterId:a.counterId,result:a.result,basket:{...a.basket},requestId:a.requestId,specific:a.specific,kit:a.kit,server:a.server?.id,path:a.path?.map(c=>({...c}))||[],roomId:a.roomId}))}};
 window.addEventListener('editbegin',()=>{paused=true;for(const a of actors)Characters.remove(a.node);actors.length=0;selected=null;ShopStaff.reset();state.serviceSession=null;saveGame(false)});
-window.addEventListener('editend',()=>{paused=false;lastFrame=Date.now();arrival=8;refresh();ShopStaff.ensure();spawn();draw()});
+window.addEventListener('editend',()=>{ShopLogistics.ensure();paused=false;lastFrame=Date.now();arrival=8;refresh();ShopStaff.ensure();spawn();draw()});
 window.addEventListener('shopstarted',()=>{lastFrame=Date.now();arrival=8;ShopStaff.ensure();spawn();draw()});
 window.addEventListener('layoutchange',refresh);window.addEventListener('statechange',refresh);
 document.addEventListener('visibilitychange',()=>lastFrame=Date.now());
@@ -127,7 +129,7 @@ function restore(saved){
  return true;
 }
 ShopStaff.init({graph:()=>graph,actor:id=>actors.find(a=>a.id===id),waiting:()=>actors.filter(a=>a.phase==='service-queue').sort((a,b)=>a.ticket-b.ticket),available,fail,ready(a){if(!a.paid&&a.server)walk(a,'to-counter')}});
-refresh();
+refresh();ShopLogistics.ensure();
 if(!restore(state.serviceSession)){ShopStaff.reset();ShopStaff.ensure();spawn();arrival=8}
 draw();saveGame(false);
 function frame(){tick();requestAnimationFrame(frame)}requestAnimationFrame(frame);

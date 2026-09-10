@@ -1,4 +1,4 @@
-# Aquarium Shop Tycoon · v0.9
+# Aquarium Shop Tycoon · v0.10
 Demo cozy/isométrica de niveles 1–10. Jugar: https://xefnascrypto-star.github.io/aquarium-shop-tycoon/
 
 ## Recorrido jugable
@@ -79,3 +79,13 @@ Clientes y empleados usan la misma cuadrícula, radio físico de 0,28 y movimien
 La partida guarda posiciones, trayectos, preparación restante, cola y encargos asignados. Al recargar se reanuda el servicio sin repetir cobros. Al entrar en el editor se liberan las reservas de trabajo y se retiran visitas sin cobrar, como antes; al salir se reconstruyen recorridos. Un guardado incompatible o dañado descarta sólo la sesión física, conservando stock, dinero y pedidos.
 El renderizador mantiene el estilo vectorial cozy; el uniforme utiliza la identidad de la tienda. Los bocadillos de empleados se limitan a preparación/caja. No se añaden niveles, salarios, precios ni departamentos nuevos. La arquitectura separa perfiles, asignación, locomoción y dibujo para futuras habilidades, especialidades, descansos y más puestos.
 staff.test.cjs comprueba uno/dos empleados, trabajos simultáneos, tres distribuciones y guardado durante preparación, transporte y cobro. staff-edge.test.cjs comprueba distancia, pasillo de una casilla, bloqueo/reapertura y ausencia de doble pago. Los informes están en staff-v09-report.json y staff-distance-v09-report.json. La prueba completa de progresión genera playthrough-v09.json.
+
+
+## Recepción y reposición v0.10
+La recepción ocupa el antiguo rincón de cajas y se puede mover con el editor. Cada entrega aparece como cajas de producto seco o bolsas con agua y peces. Los empleados recogen allí y caminan hasta un expositor compatible antes de colocar la mercancía.
+El proveedor muestra unidades expuestas y pendientes en recepción; al tocar un expositor se ve su cantidad propia. Las ventas sólo usan stock expuesto. La capacidad total sigue contando toda la mercancía recibida y reservada en camino: trasladar cajas no libera espacio artificialmente.
+La reposición es automática, por lotes pequeños (objetivo de 6 peces o 4 productos por especie/producto y expositor). Se activa al llegar a la mitad o cuando un cliente necesita más. No cambia precios, costes de contratación, salarios, proveedores ni niveles. La mercancía restante sigue en recepción.
+Se atienden primero solicitudes de venta que pueden prepararse, después reposición para clientes esperando, expositores vacíos y reposición normal. Una tarea física iniciada termina antes de recibir otra. Dos empleados reservan lotes distintos; no se asigna dos veces el mismo producto y destino. Un cliente puede esperar reposición hasta 35 segundos de juego antes de abandonar.
+Editar cancela recorridos sin perder ni duplicar mercancía. Guardar y recargar conserva stock por expositor y tareas en curso. Las partidas v0.9 se migran conservando todas sus unidades; el stock inicial se distribuye y el sobrante espera reposición automática.
+Los estados habituales usan pequeños símbolos y animaciones, sin textos constantes. Los clientes salen con su bolsa tras pagar. Los personajes siguen separados del dibujo para sustituir assets más adelante.
+Pruebas específicas: logistics.test.cjs (entregas simultáneas, dos empleados, reposición, guardado en cuatro fases, cancelación, recepción bloqueada, distancias y pasillo estrecho), staff.test.cjs (movimiento real en tres distribuciones), más las regresiones de pedidos, identidad, eventos, economía y progresión. Informes v010 y capturas se guardan junto al proyecto; backup externo en D:\chatgpt\99_Backups.

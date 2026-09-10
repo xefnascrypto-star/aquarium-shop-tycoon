@@ -1,0 +1,65 @@
+{
+  "layouts": [
+    {
+      "name": "rows",
+      "samples": 7127,
+      "errors": [],
+      "phases": [
+        "idle",
+        "to-product",
+        "preparing-fish",
+        "carrying-order",
+        "at-counter",
+        "checkout",
+        "preparing-product"
+      ],
+      "maxJobs": 1,
+      "sales": 7,
+      "workers": 1
+    },
+    {
+      "name": "rotated",
+      "samples": 15311,
+      "errors": [],
+      "phases": [
+        "idle",
+        "returning",
+        "to-product",
+        "preparing-product",
+        "carrying-order",
+        "at-counter",
+        "checkout",
+        "preparing-fish"
+      ],
+      "maxJobs": 2,
+      "sales": 17,
+      "workers": 2
+    },
+    {
+      "name": "island",
+      "samples": 14782,
+      "errors": [],
+      "phases": [
+        "idle",
+        "returning",
+        "to-product",
+        "preparing-fish",
+        "carrying-order",
+        "checkout",
+        "preparing-product",
+        "at-counter"
+      ],
+      "maxJobs": 2,
+      "sales": 12,
+      "workers": 2
+    }
+  ],
+  "persistedPhases": [
+    "preparing-fish",
+    "carrying-order",
+    "checkout"
+  ],
+  "supplierOrdersPreserved": true,
+  "staffOnlyBlockedAccess": true,
+  "errors": []
+}

@@ -75,3 +75,11 @@
 #incomingOrders{border-top:1px solid #d8ddc8;margin-top:16px;padding-top:12px}#incomingTitle{font-size:16px;margin:0 0 8px}#orderCapacity{font-size:12px;line-height:1.5}.incoming-order{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#edf1e4;padding:10px 12px;border-radius:12px;margin:7px 0}.incoming-order b{font-size:13px}.incoming-order small{display:block;font-size:11px;color:#63806f;margin-top:4px}.order-timer{font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap}.orders-empty{font-size:12px;color:#63806f}#delivery{max-height:260px;overflow-y:auto}
 
 .live-worker{cursor:pointer}.live-worker .visitor-bubble rect{fill:#fbefd3;stroke:#c8a465}.live-worker .visitor-bubble text{font-size:10px}.live-worker[data-task="preparing-fish"] .character-arm,.live-worker[data-task="preparing-product"] .character-arm{animation:prepare-order .8s ease-in-out infinite alternate;transform-origin:0 -39px}@keyframes prepare-order{from{transform:rotate(-7deg)}to{transform:rotate(7deg)}}@media(prefers-reduced-motion:reduce){.live-worker .character-arm{animation:none!important}}
+
+/* Work indicators stay compact; products communicate the carried task. */
+.live-worker[data-task="restocking"] .character-arm,.live-worker[data-task="collecting-stock"] .character-arm{animation:prepare-order .55s ease-in-out infinite alternate}
+.live-worker[data-task="checkout"] .character-head{animation:checkout-nod .8s ease-in-out infinite alternate}
+.logistics-help{font-size:.82rem;line-height:1.4;color:#527567}
+@media(prefers-reduced-motion:reduce){.live-worker .character-arm,.live-worker .character-head{animation:none!important}}
+
+@keyframes checkout-nod{from{transform:translateY(0)}to{transform:translateY(1.5px)}}

@@ -10,6 +10,7 @@ function createNode(w){
  const model=node.querySelector('.character-model'),head=model.querySelector('.character-head');
  const apron=document.createElementNS('http://www.w3.org/2000/svg','g');apron.innerHTML='<path d="M-10-39H10L12-15H-12Z" fill="#eee1bd"/><svg class="brand-badge" x="-7" y="-34" width="14" height="14" viewBox="0 0 64 64">'+ShopIdentity.mark().replace(/^<svg[^>]*>|<\/svg>$/g,'')+'</svg>';model.insertBefore(apron,head);
  node.addEventListener('click',()=>{if(!dragged)showPanel('team')});node.addEventListener('keydown',e=>{if(['Enter',' '].includes(e.key)){e.preventDefault();showPanel('team')}});
+ const indicator=node.querySelector('.visitor-bubble');indicator.setAttribute('transform','translate(-13 -106)');indicator.querySelector('rect').setAttribute('width','26');indicator.querySelector('text').setAttribute('x','13');
  w.node=node;
 }
 function route(w,goals,phase){
@@ -25,6 +26,8 @@ function arrive(w){
  w.phase=products[stop.product].vol===0?'preparing-fish':'preparing-product';w.remaining=w.phase==='preparing-fish'?w.profile.fishSeconds:w.profile.goodsSeconds;
  }else if(w.phase==='carrying-order')w.phase='at-counter';
  else if(w.phase==='returning')w.phase='idle';
+ else if(w.phase==='to-receipt'){w.phase='collecting-stock';w.remaining=.7}
+ else if(w.phase==='carrying-stock'){w.phase='restocking';w.remaining=1.4}
 }
 function pickup(w){
  const a=context.actor(w.job),stop=a?.stops[w.stop],o=stop&&g().objects.find(o=>o.id===stop.objectId);if(!o)return false;
@@ -34,7 +37,7 @@ function pickup(w){
  w.objectId=o.id;
  return route(w,goals,'to-product');
 }
-function release(w){w.job=null;w.carry=null;w.stop=0;w.objectId=null;w.remaining=0;const s=station(w);if(!s||!route(w,[s.cell],'returning')){w.path=null;w.motion=null;w.phase='blocked'}}
+function release(w){w.restock=null;w.job=null;w.carry=null;w.stop=0;w.objectId=null;w.remaining=0;const s=station(w);if(!s||!route(w,[s.cell],'returning')){w.path=null;w.motion=null;w.phase='blocked'}}
 function cancel(w){const a=context.actor(w.job);w.job=null;release(w);if(a&&!a.paid)context.fail(a,ShopI18n.t('staffBlocked'))}
 function ensure(){
  const defs=definitions();
@@ -51,15 +54,24 @@ function ensure(){
  if(!station(w)&&!w.job){const s=all.find(s=>!workers.some(v=>v!==w&&v.counterId===s.counterId&&v.stationIndex===s.index));if(s){w.counterId=s.counterId;w.stationIndex=s.index;route(w,[s.cell],'returning')}}
  }
 }
-function reserved(k,except){if(!context)return 0;return workers.reduce((sum,w)=>{const a=context.actor(w.job);return sum+(a&&!a.paid&&a.id!==except&&!a.kit&&!a.requestId?(a.basket[k]||0):0)},0)}
+function reserved(k,except,objectId){if(!context)return 0;return workers.reduce((sum,w)=>{const a=context.actor(w.job);return sum+(a&&!a.paid&&a.id!==except&&!a.kit&&!a.requestId&&(!objectId||a.stops.some(s=>s.objectId===objectId&&N.goods[g().objects.find(o=>o.id===s.objectId)?.kind]?.includes(k)))?(a.basket[k]||0):0)},0)}
 function assign(){
  for(const a of context.waiting()){
- if(!context.available(a)){context.fail(a,ShopI18n.t('staffNoStock'));continue}
- const free=workers.filter(w=>!w.job&&['idle','returning'].includes(w.phase)&&!(w.id===1&&state.employeeUnpaid));
+ if(!context.available(a)){if(Object.entries(a.basket).some(([k,q])=>(state.stock[k]||0)<q))context.fail(a,ShopI18n.t('staffNoStock'));else if(a.waitTime>35)context.fail(a,ShopI18n.t('staffRestockLate'));continue}
+ const free=workers.filter(w=>!w.job&&!w.restock&&['idle','returning'].includes(w.phase)&&!(w.id===1&&state.employeeUnpaid));
  const eligible=free.find(w=>{const s=station(w);return s&&a.stops.every(stop=>{const o=g().objects.find(o=>o.id===stop.objectId);return o&&N.route(g(),w.cell,N.staffServices(g(),o))&&N.route(g(),w.cell,[s.cell])})});
  if(!eligible)continue;
  const w=eligible,s=station(w);w.job=a.id;w.stop=0;w.carry=null;a.phase='staff-working';a.counterId=w.counterId;a.server={id:w.id,cell:{...s.customer},seconds:w.profile.seconds};
  if(!pickup(w))cancel(w);
+ }
+}
+function restockAssign(){
+ const tasks=ShopLogistics.candidates(g(),workers,context.waiting());
+ for(const w of workers.filter(w=>!w.job&&!w.restock&&['idle','returning'].includes(w.phase)&&!(w.id===1&&state.employeeUnpaid))){
+ const receipt=ShopLogistics.receipt(g());if(!receipt)continue;
+ const first=N.route(g(),w.cell,N.staffServices(g(),receipt));if(!first)continue;
+ const index=tasks.findIndex(t=>{const o=g().objects.find(o=>o.id===t.objectId);return o&&N.route(g(),first.at(-1),N.staffServices(g(),o))});if(index<0)continue;
+ w.restock=tasks.splice(index,1)[0];route(w,N.staffServices(g(),receipt),'to-receipt');
  }
 }
 function advance(dt){
@@ -72,6 +84,12 @@ function advance(dt){
  if(move.blocked){if(!w.goal||!route(w,[w.goal],w.phase))cancel(w)}else if(move.done)arrive(w);
  continue;
  }
+ if(w.phase==='collecting-stock'||w.phase==='restocking'){
+ w.remaining-=dt;if(w.remaining>0)continue;
+ if(w.phase==='collecting-stock'){const o=g().objects.find(o=>o.id===w.restock?.objectId);w.carry=products[w.restock?.k]?.vol===0?'fish':'goods';if(!o||!route(w,N.staffServices(g(),o),'carrying-stock'))release(w)}
+ else {ShopLogistics.commit(w.restock);release(w);render();saveGame(false)}
+ continue;
+ }
  if(w.phase==='preparing-fish'||w.phase==='preparing-product'){
  w.remaining-=dt;if(w.remaining>0)continue;
  const a=context.actor(w.job);if(!a||!context.available(a)){cancel(w);continue}
@@ -81,17 +99,17 @@ function advance(dt){
  else {const s=station(w);if(!s||!route(w,[s.cell],'carrying-order'))cancel(w);else context.ready(a,w)}
  }
  }
- assign();
+ assign();restockAssign();
 }
 function ready(id,customerId){const w=workers.find(w=>w.id===id&&w.job===customerId);if(!w||!['at-counter','checkout'].includes(w.phase))return false;const s=station(w);if(!s||N.key(s.cell)!==N.key(w.cell))return false;w.phase='checkout';return true}
 function complete(id){const w=workers.find(w=>w.job===id);if(w)release(w)}
 function reset(){for(const w of workers)w.node.remove();workers.length=0}
 function draw(){
  for(const w of workers){
- const label=ShopI18n.t(({idle:'staffIdle',returning:'staffReturning','to-product':'staffServing','preparing-fish':'staffFish','preparing-product':'staffProduct','carrying-order':'staffCarrying','at-counter':'staffTill',checkout:'staffTill',blocked:'staffBlocked'})[w.phase]);
- const bubble=['preparing-fish','preparing-product','checkout'].includes(w.phase)?label:'';
+ const label=ShopI18n.t(({idle:'staffIdle',returning:'staffReturning','to-product':'staffServing','preparing-fish':'staffFish','preparing-product':'staffProduct','carrying-order':'staffCarrying','at-counter':'staffTill',checkout:'staffTill',blocked:'staffBlocked','to-receipt':'staffReceipt','collecting-stock':'staffCollect','carrying-stock':'staffRestockCarry',restocking:'staffRestock'})[w.phase]);
+ const bubble=({ 'preparing-fish':'◌', 'preparing-product':'◌',checkout:'✓',restocking:'↥','collecting-stock':'↓'})[w.phase]||'';
  const feet=M.project(g().room,w.position.x,w.position.y);
- ShopCharacters.update(w.node,{feet,phase:w.phase.startsWith('preparing')?'browsing':w.phase,moving:!!w.path,distance:w.distance,facing:w.facing,bubble,label:ShopI18n.t('clerk')+': '+label,result:'pending'});
+ ShopCharacters.update(w.node,{feet,phase:(w.phase.startsWith('preparing')||w.phase==='restocking')?'browsing':w.phase,moving:!!w.path,distance:w.distance,facing:w.facing,bubble,label:ShopI18n.t('clerk')+': '+label,result:'pending'});
  w.node.dataset.task=w.phase;w.node.dataset.job=w.job??'';w.node.querySelector('.character-model>path').setAttribute('fill',ShopIdentity.colors[ShopIdentity.current.color]);
  const bag=w.node.querySelector('.purchase-bag');bag.style.display=w.carry?'':'none';
  if(bag.dataset.carry!==(w.carry||'')){bag.dataset.carry=w.carry||'';bag.innerHTML=w.carry==='fish'?'<path d="M3-7H13L10-1Q25 12 16 25H0Q-7 12 6-1Z" fill="#e0f5ed" fill-opacity=".85" stroke="#669c9d" stroke-width="1.5"/><path d="M-1 10Q8 8 19 11L16 24H0Z" fill="#77ced4" opacity=".8"/><path d="M5 17L1 14V20Z" fill="#eda768"/><ellipse cx="9" cy="17" rx="5" ry="3" fill="#eda768"/><circle cx="11" cy="16" r=".8" fill="#41666b"/><path d="M3-4H13" stroke="#64988c" stroke-width="2"/>':'<path d="M-2 1L9-4L21 2V23L9 28L-2 21Z" fill="#d5b17c"/><path d="M9 8V28M-2 1L9 8L21 2" stroke="#ae895f" fill="none"/>'}
@@ -103,11 +121,15 @@ function restore(data,actors){
  if(!Array.isArray(data)||data.length>definitions().length)return false;
  const used=new Set();
  for(const w of data){
- if(!['idle','returning','to-product','preparing-fish','preparing-product','carrying-order','at-counter','checkout','blocked'].includes(w.phase)||!definitions().some(d=>d.id===w.id)||used.has(w.id)||!N.clear(g(),w.position)||!station(w)||!Number.isFinite(w.distance)||!Number.isFinite(w.remaining))return false;used.add(w.id);
+ if(!['idle','returning','to-product','preparing-fish','preparing-product','carrying-order','at-counter','checkout','blocked','to-receipt','collecting-stock','carrying-stock','restocking'].includes(w.phase)||!definitions().some(d=>d.id===w.id)||used.has(w.id)||!N.clear(g(),w.position)||!station(w)||!Number.isFinite(w.distance)||!Number.isFinite(w.remaining))return false;used.add(w.id);
+ if(!!w.restock!==['to-receipt','collecting-stock','carrying-stock','restocking'].includes(w.phase))return false;
+ if(w.restock&&(!products[w.restock.k]||!Number.isInteger(w.restock.q)||w.restock.q<1||w.job!==null||!g().objects.some(o=>o.id===w.restock.objectId)))return false;
  if(w.job!==null&&!actors.some(a=>a.id===w.job&&!a.paid&&a.server?.id===w.id))return false;
  if(w.motion&&(!Array.isArray(w.motion)||!w.motion.every((p,i)=>N.clear(g(),p)&&(i===0||N.segmentClear(g(),w.motion[i-1],p)))))return false;
  }
  if(new Set(data.filter(w=>w.job!==null).map(w=>w.job)).size!==data.filter(w=>w.job!==null).length)return false;
+ for(const k of Object.keys(products))if(data.reduce((n,w)=>n+(w.restock?.k===k?w.restock.q:0),0)>ShopLogistics.stored(k))return false;
+ const keys=data.filter(w=>w.restock).map(w=>w.restock.objectId+':'+w.restock.k);if(new Set(keys).size!==keys.length)return false;
  reset();for(const raw of data){const w=JSON.parse(JSON.stringify(raw));w.profile=definitions().find(d=>d.id===w.id);createNode(w);workers.push(w)}return true;
 }
 return {init(api){context=api},ensure,advance,ready,complete,reserved,draw,reset,restore,serialize,snapshot:serialize,occupied:()=>workers.map(w=>({...w.cell,roomId:'main'}))};

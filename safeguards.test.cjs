@@ -13,7 +13,7 @@ await p.evaluate(()=>order('neon',5));assert.equal(await p.evaluate(()=>incoming
 await p.evaluate(()=>{state.orders=[];state.supplier='local';state.stock.food=20;state.stock.conditioner=0;state.money=1000;order('filter',1)});assert.equal(await p.evaluate(()=>incomingOrders().length),0,'cannot exceed volume');
 await p.evaluate(()=>{state.stock=Object.fromEntries(Object.keys(products).map(k=>[k,0]));state.level=4;state.kitRequested=true;for(const [k,q] of Object.entries(ShopDesign.kit))state.stock[k]=q;state.money=1000});
 assert.equal(await p.evaluate(()=>sellBasket({betta:1})),null,'kit stock is reserved');
-const amount=await p.evaluate(()=>Object.entries(ShopDesign.kit).reduce((n,[k,q])=>n+products[k].sell*q,0));await p.evaluate(()=>sellBasket(ShopDesign.kit));assert.equal(await p.evaluate(()=>state.money),1000+amount);assert.equal(await p.evaluate(()=>state.kits),1);assert.equal(await p.evaluate(()=>sellBasket(ShopDesign.kit)),null);
+const amount=await p.evaluate(()=>Object.entries(ShopDesign.kit).reduce((n,[k,q])=>n+products[k].sell*q,0));await p.evaluate(()=>(()=>{state.shelf=true;state.layout.objects.find(o=>o.kind==='shelf').placed=true;state.logistics=null;ShopLogistics.ensure();return sellBasket(ShopDesign.kit)})());assert.equal(await p.evaluate(()=>state.money),1000+amount);assert.equal(await p.evaluate(()=>state.kits),1);assert.equal(await p.evaluate(()=>sellBasket(ShopDesign.kit)),null);
 await p.locator('#editStart').click();
 await p.evaluate(()=>{state.level=9;state.money=2000;state.employee=null;hire('nico');state.speed=1});
 assert.equal(await p.evaluate(()=>state.money),500);
