@@ -19,10 +19,15 @@ ancistrus:{name:'Ancistrus',buy:35,sell:70,vol:0,level:6,display:'battery',icon:
 anubias:{name:'Anubias',buy:45,sell:90,vol:1,level:10,display:'plants',investment:'plants',icon:'🌿'},
 discus:{name:'Disco',buy:100,sell:190,vol:0,level:10,display:'professional',investment:'professional',icon:'🐠'}
 };
+const space={initial:{width:16,depth:14},expanded:{width:20,depth:17}};
+const recovery={target:15,coinInterval:60,coinAmount:1,reward:10,rewardResourceCeiling:30,rewardCooldown:1800,rewardWindow:3600,rewardLimit:2};
+const staffMotion={walkSpeed:1.8,fishSeconds:3,goodsSeconds:1.1,visualScale:1.18};
 const upgrades={
+microWidth:{name:'Franja lateral',cost:180,level:2,detail:'Una columna adicional de casillas. Precio provisional; compatible con la ampliación grande.'},
+microDepth:{name:'Franja del fondo',cost:260,level:3,detail:'Una fila adicional de casillas. Precio provisional; compatible con la ampliación grande.'},
 shelf:{name:'Estantería',cost:250,level:2,kind:'shelf',detail:'Expón comida, acondicionador y futuro equipamiento.'},
 tank3:{name:'Acuario de 60 L',cost:350,level:3,kind:'tank3',detail:'Un hogar para Guppys y Platys. Tú eliges su sitio.'},
-expansion:{name:'Ampliación de la tienda',cost:1200,level:5,detail:'14 × 13 → 18 × 16 casillas. Requiere 25 ventas y un acuario completo. +10 Perlas.'},
+expansion:{name:'Ampliación de la tienda',cost:1200,level:5,detail:'16 × 14 → 20 × 17 casillas. Requiere 25 ventas y un acuario completo. +10 Perlas.'},
 tank4:{name:'Cuarto acuario',cost:350,level:5,kind:'tank4',detail:'Otro expositor para Bettas y Cometas. Requiere ampliación.'},
 tank5:{name:'Quinto acuario',cost:350,level:5,kind:'tank5',detail:'Otro expositor para Guppys y Platys. Requiere ampliación.'},
 shelf2:{name:'Segunda estantería',cost:250,level:5,kind:'shelf2',detail:'Más opciones de distribución. Requiere ampliación.'},
@@ -48,5 +53,5 @@ const levels=[
 {level:9,xp:1700,sales:110,name:'Siempre preparados',unlock:'Colas · contratación del segundo empleado'},
 {level:10,xp:2200,sales:140,name:'Tu primera gran decisión',unlock:'Plantas I · batería profesional · Almacén II'}
 ];
-return {products,upgrades,employees,kit,levels};
+return {products,upgrades,employees,kit,levels,space,recovery,staffMotion};
 });

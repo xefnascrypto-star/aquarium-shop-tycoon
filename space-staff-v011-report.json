@@ -1,0 +1,104 @@
+{
+  "reports": [
+    {
+      "name": "two",
+      "sales": 4,
+      "samples": 13502,
+      "phases": [
+        "idle",
+        "to-product",
+        "preparing-fish",
+        "carrying-order",
+        "at-counter",
+        "checkout",
+        "preparing-product"
+      ],
+      "maxJobs": 1,
+      "access": []
+    },
+    {
+      "name": "three",
+      "sales": 3,
+      "samples": 13501,
+      "phases": [
+        "idle",
+        "preparing-product",
+        "at-counter",
+        "checkout",
+        "to-product",
+        "preparing-fish",
+        "carrying-order"
+      ],
+      "maxJobs": 1,
+      "access": []
+    },
+    {
+      "name": "rows",
+      "sales": 3,
+      "samples": 13502,
+      "phases": [
+        "idle",
+        "to-product",
+        "preparing-fish",
+        "carrying-order",
+        "at-counter",
+        "checkout",
+        "preparing-product"
+      ],
+      "maxJobs": 1,
+      "access": []
+    },
+    {
+      "name": "rotated",
+      "sales": 3,
+      "samples": 13502,
+      "phases": [
+        "idle",
+        "to-product",
+        "preparing-fish",
+        "carrying-order",
+        "at-counter",
+        "checkout",
+        "preparing-product"
+      ],
+      "maxJobs": 1,
+      "access": []
+    },
+    {
+      "name": "island",
+      "sales": 5,
+      "samples": 17215,
+      "phases": [
+        "idle",
+        "returning",
+        "to-product",
+        "preparing-fish",
+        "carrying-order",
+        "at-counter",
+        "checkout",
+        "preparing-product"
+      ],
+      "maxJobs": 2,
+      "access": []
+    },
+    {
+      "name": "rotated-two",
+      "sales": 5,
+      "samples": 16606,
+      "phases": [
+        "idle",
+        "returning",
+        "to-product",
+        "preparing-fish",
+        "carrying-order",
+        "at-counter",
+        "checkout",
+        "preparing-product"
+      ],
+      "maxJobs": 2,
+      "access": []
+    }
+  ],
+  "blockedNoSale": true,
+  "errors": []
+}

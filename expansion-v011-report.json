@@ -1,0 +1,71 @@
+{
+  "reports": [
+    {
+      "upgrade": "microWidth",
+      "before": "El objeto queda fuera de la habitación.",
+      "after": "",
+      "charged": 180,
+      "room": {
+        "w": 17,
+        "d": 14
+      },
+      "route": true,
+      "work": true,
+      "sales": 1,
+      "samples": 5107,
+      "phases": [
+        "idle",
+        "to-product",
+        "preparing-fish",
+        "carrying-order",
+        "checkout"
+      ],
+      "reload": true
+    },
+    {
+      "upgrade": "microDepth",
+      "before": "El objeto queda fuera de la habitación.",
+      "after": "",
+      "charged": 260,
+      "room": {
+        "w": 16,
+        "d": 15
+      },
+      "route": true,
+      "work": true,
+      "sales": 1,
+      "samples": 7355,
+      "phases": [
+        "idle",
+        "to-product",
+        "preparing-fish",
+        "carrying-order",
+        "checkout"
+      ],
+      "reload": true
+    },
+    {
+      "upgrade": "expansion",
+      "before": "El objeto queda fuera de la habitación.",
+      "after": "",
+      "charged": 1200,
+      "room": {
+        "w": 20,
+        "d": 17
+      },
+      "route": true,
+      "work": true,
+      "sales": 1,
+      "samples": 7359,
+      "phases": [
+        "idle",
+        "to-product",
+        "preparing-fish",
+        "carrying-order",
+        "checkout"
+      ],
+      "reload": true
+    }
+  ],
+  "errors": []
+}

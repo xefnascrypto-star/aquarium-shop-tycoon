@@ -3,7 +3,7 @@ window.ShopStaff=(()=>{
 const N=ShopNavigation,M=ShopLayout,Motion=ShopMotion,workers=[];
 let context;
 const g=()=>context.graph().grids.main;
-const definitions=()=>[{id:0,key:'owner',seconds:6,walkSpeed:3,fishSeconds:2.2,goodsSeconds:.9},...(state.employee?[{id:1,key:state.employee,seconds:ShopDesign.employees[state.employee].service,walkSpeed:ShopDesign.employees[state.employee].walkSpeed||3,fishSeconds:2.2,goodsSeconds:.9}]:[])];
+const definitions=()=>[{id:0,key:'owner',seconds:6,walkSpeed:ShopDesign.staffMotion.walkSpeed,fishSeconds:ShopDesign.staffMotion.fishSeconds,goodsSeconds:ShopDesign.staffMotion.goodsSeconds},...(state.employee?[{id:1,key:state.employee,seconds:ShopDesign.employees[state.employee].service,walkSpeed:ShopDesign.employees[state.employee].walkSpeed||ShopDesign.staffMotion.walkSpeed,fishSeconds:ShopDesign.staffMotion.fishSeconds,goodsSeconds:ShopDesign.staffMotion.goodsSeconds}]:[])];
 const station=(w)=>{const counter=g().objects.find(o=>o.id===w.counterId);return counter?N.stations(g(),counter)[w.stationIndex]||null:null};
 function createNode(w){
  const node=ShopCharacters.create({id:10000+w.id,seed:410+w.id*29});node.classList.remove('live-visitor');node.classList.add('live-worker');node.dataset.workerId=w.id;node.dataset.visitorId='staff-'+w.id;
@@ -11,6 +11,7 @@ function createNode(w){
  const apron=document.createElementNS('http://www.w3.org/2000/svg','g');apron.innerHTML='<path d="M-10-39H10L12-15H-12Z" fill="#eee1bd"/><svg class="brand-badge" x="-7" y="-34" width="14" height="14" viewBox="0 0 64 64">'+ShopIdentity.mark().replace(/^<svg[^>]*>|<\/svg>$/g,'')+'</svg>';model.insertBefore(apron,head);
  node.addEventListener('click',()=>{if(!dragged)showPanel('team')});node.addEventListener('keydown',e=>{if(['Enter',' '].includes(e.key)){e.preventDefault();showPanel('team')}});
  const indicator=node.querySelector('.visitor-bubble');indicator.setAttribute('transform','translate(-13 -106)');indicator.querySelector('rect').setAttribute('width','26');indicator.querySelector('text').setAttribute('x','13');
+ model.setAttribute('transform','scale('+ShopDesign.staffMotion.visualScale+')');node.querySelector('.purchase-bag').setAttribute('transform','translate(20 -31) scale(1.25)');
  w.node=node;
 }
 function route(w,goals,phase){
@@ -54,7 +55,7 @@ function ensure(){
  if(!station(w)&&!w.job){const s=all.find(s=>!workers.some(v=>v!==w&&v.counterId===s.counterId&&v.stationIndex===s.index));if(s){w.counterId=s.counterId;w.stationIndex=s.index;route(w,[s.cell],'returning')}}
  }
 }
-function reserved(k,except,objectId){if(!context)return 0;return workers.reduce((sum,w)=>{const a=context.actor(w.job);return sum+(a&&!a.paid&&a.id!==except&&!a.kit&&!a.requestId&&(!objectId||a.stops.some(s=>s.objectId===objectId&&N.goods[g().objects.find(o=>o.id===s.objectId)?.kind]?.includes(k)))?(a.basket[k]||0):0)},0)}
+function reserved(k,except,objectId){if(!context)return 0;return workers.reduce((sum,w)=>{const a=context.actor(w.job);return sum+(a&&!a.paid&&a.id!==except&&!a.kit&&!a.requestId&&(!objectId||(a.locations?a.locations[k]===objectId:a.stops.some(s=>s.objectId===objectId&&N.goods[g().objects.find(o=>o.id===s.objectId)?.kind]?.includes(k))))?(a.basket[k]||0):0)},0)}
 function assign(){
  for(const a of context.waiting()){
  if(!context.available(a)){if(Object.entries(a.basket).some(([k,q])=>(state.stock[k]||0)<q))context.fail(a,ShopI18n.t('staffNoStock'));else if(a.waitTime>35)context.fail(a,ShopI18n.t('staffRestockLate'));continue}
@@ -132,5 +133,5 @@ function restore(data,actors){
  const keys=data.filter(w=>w.restock).map(w=>w.restock.objectId+':'+w.restock.k);if(new Set(keys).size!==keys.length)return false;
  reset();for(const raw of data){const w=JSON.parse(JSON.stringify(raw));w.profile=definitions().find(d=>d.id===w.id);createNode(w);workers.push(w)}return true;
 }
-return {init(api){context=api},ensure,advance,ready,complete,reserved,draw,reset,restore,serialize,snapshot:serialize,occupied:()=>workers.map(w=>({...w.cell,roomId:'main'}))};
+return {init(api){context=api},ensure,advance,ready,complete,reserved,draw,reset,restore,serialize,snapshot:serialize,visualWorkers:()=>workers,occupied:()=>workers.map(w=>({...w.cell,roomId:'main'}))};
 })();

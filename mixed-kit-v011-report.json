@@ -1,0 +1,16 @@
+{
+  "completed": true,
+  "locations": {
+    "betta": "betta-1",
+    "food": "counter-1",
+    "conditioner": "shelf-1",
+    "filter": "shelf-1",
+    "heater": "shelf-1",
+    "light": "shelf-1",
+    "siphon": "shelf-1",
+    "thermometer": "shelf-1"
+  },
+  "reload": true,
+  "noDoubleSale": true,
+  "errors": []
+}

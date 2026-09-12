@@ -31,10 +31,10 @@ function candidates(g,workers,waiting=[]){
  for(const k of Object.keys(products)){
   if(!unlocked(k))continue;let supply=stored(k)-(reserved[k]||0);if(supply<=0)continue;
   const destinations=g.objects.filter(o=>N.goods[o.kind]?.includes(k)).sort((a,b)=>Number(waiting.some(v=>v.stops.some(s=>s.objectId===b.id)&&v.basket[k]))-Number(waiting.some(v=>v.stops.some(s=>s.objectId===a.id)&&v.basket[k])));
-  for(const o of destinations){const demand=Math.max(limit(k),...waiting.filter(a=>a.stops.some(s=>s.objectId===o.id)).map(a=>a.basket[k]||0));const have=at(o.id,k);
-   if((have>=demand||have>Math.floor(limit(k)/2)&&!waiting.some(a=>a.stops.some(s=>s.objectId===o.id)&&a.basket[k]>have))||claimed.has(o.id+':'+k))continue;
+  for(const o of destinations){const demand=Math.max(limit(k),...waiting.filter(a=>(a.locations?a.locations[k]===o.id:a.stops.some(s=>s.objectId===o.id))).map(a=>a.basket[k]||0));const have=at(o.id,k);
+   if((have>=demand||have>Math.floor(limit(k)/2)&&!waiting.some(a=>(a.locations?a.locations[k]===o.id:a.stops.some(s=>s.objectId===o.id))&&a.basket[k]>have))||claimed.has(o.id+':'+k))continue;
    const q=Math.min(supply,demand-have);if(q<=0)continue;
-   const urgent=waiting.some(a=>a.stops.some(s=>s.objectId===o.id)&&a.basket[k]>have)?2:have===0?1:0;tasks.push({objectId:o.id,k,q,urgent});supply-=q;
+   const urgent=waiting.some(a=>(a.locations?a.locations[k]===o.id:a.stops.some(s=>s.objectId===o.id))&&a.basket[k]>have)?2:have===0?1:0;tasks.push({objectId:o.id,k,q,urgent});supply-=q;
   }
  }
  return tasks.sort((a,b)=>Number(b.urgent)-Number(a.urgent));

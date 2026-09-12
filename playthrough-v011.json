@@ -1,0 +1,98 @@
+{
+  "levels": [
+    {
+      "step": 0,
+      "level": 1,
+      "money": 500,
+      "sampledMoney": 500,
+      "served": 0,
+      "xp": 0
+    },
+    {
+      "step": 6,
+      "level": 2,
+      "money": 680,
+      "sampledMoney": 680,
+      "served": 5,
+      "xp": 50
+    },
+    {
+      "step": 12,
+      "level": 3,
+      "money": 455,
+      "sampledMoney": 455,
+      "served": 8,
+      "xp": 140
+    },
+    {
+      "step": 30,
+      "level": 4,
+      "money": 150,
+      "sampledMoney": 150,
+      "served": 19,
+      "xp": 390
+    },
+    {
+      "step": 75,
+      "level": 5,
+      "money": 812,
+      "sampledMoney": 812,
+      "served": 42,
+      "xp": 910
+    },
+    {
+      "step": 140,
+      "level": 6,
+      "money": 4,
+      "sampledMoney": 4,
+      "served": 85,
+      "xp": 1750
+    },
+    {
+      "step": 353,
+      "level": 7,
+      "money": 196,
+      "sampledMoney": 196,
+      "served": 207,
+      "xp": 4110
+    },
+    {
+      "step": 368,
+      "level": 8,
+      "money": 488,
+      "sampledMoney": 488,
+      "served": 214,
+      "xp": 4300
+    },
+    {
+      "step": 601,
+      "level": 9,
+      "money": 117,
+      "sampledMoney": 117,
+      "served": 343,
+      "xp": 7210
+    },
+    {
+      "step": 1181,
+      "level": 10,
+      "money": 12007,
+      "sampledMoney": 12007,
+      "served": 1067,
+      "xp": 17500
+    }
+  ],
+  "final": {
+    "money": 7,
+    "served": 1067,
+    "level": 10,
+    "xp": 17540,
+    "pearls": 10,
+    "kits": 1,
+    "groupSales": 49,
+    "employee": "eva",
+    "wages": 93,
+    "lost": 765,
+    "investment": "plants"
+  },
+  "checks": "Physical paths, pending cancel/reload, placement confirmation, all ten levels without money/XP cheats, suppliers, kit, groups, wages, first investment, persistence, responsive. PASS"
+}

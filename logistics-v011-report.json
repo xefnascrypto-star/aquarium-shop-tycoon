@@ -1,0 +1,29 @@
+{
+  "simultaneousArrivals": 3,
+  "saves": [
+    "to-receipt",
+    "collecting-stock",
+    "carrying-stock",
+    "restocking"
+  ],
+  "twoWorkers": 2,
+  "sales": 5,
+  "blockedAndReopened": true,
+  "near": {
+    "time": 12.7,
+    "distance": 18.848247008338518
+  },
+  "far": {
+    "time": 21.4,
+    "distance": 34.84824700833817
+  },
+  "interruptedTransfer": true,
+  "narrowPassage": true,
+  "responsive": [
+    320,
+    390,
+    768,
+    1280
+  ],
+  "errors": []
+}

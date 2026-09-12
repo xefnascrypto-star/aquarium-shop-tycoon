@@ -1,0 +1,16 @@
+{
+  "normalTimeAtX12": true,
+  "partialMinuteReload": true,
+  "zeroMoneyZeroStockRestart": true,
+  "debtRepaid": true,
+  "rewardCancelled": true,
+  "rewardOnce": true,
+  "rewardCooldownReload": true,
+  "paidStrips": true,
+  "expanded": {
+    "width": 21,
+    "depth": 18
+  },
+  "responsive": true,
+  "errors": []
+}

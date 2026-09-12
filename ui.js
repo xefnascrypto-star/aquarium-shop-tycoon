@@ -1,7 +1,7 @@
 const panel=$('panel');
 let selectedInstance=null,toastTimer,orderQuantity=5,dragged=false,cardTimer;
-const titles={stock:'El proveedor',upgrades:'Haz crecer tu tienda',activity:'Vida en la tienda',settings:'Tu partida',object:'Tu expositor',circulation:'Circulación',journey:'Tu siguiente paso',contract:'Mi primer acuario',team:'Tu equipo'};
-function showPanel(name,title){document.querySelectorAll('[data-section]').forEach(s=>s.hidden=s.dataset.section!==name);$('panelTitle').textContent=title||titles[name];syncScene();if(!panel.open)panel.showModal()}
+const titles={support:'Un pequeño apoyo',stock:'El proveedor',upgrades:'Haz crecer tu tienda',activity:'Vida en la tienda',settings:'Tu partida',object:'Tu expositor',circulation:'Circulación',journey:'Tu siguiente paso',contract:'Mi primer acuario',team:'Tu equipo'};
+function showPanel(name,title){document.querySelectorAll('[data-section]').forEach(s=>s.hidden=s.dataset.section!==name);$('panelTitle').textContent=title||titles[name];syncScene();if(name==='support')window.ShopRecovery?.render();if(!panel.open)panel.showModal()}
 document.querySelectorAll('[data-panel]').forEach(b=>b.onclick=()=>showPanel(b.dataset.panel));
 $('closePanel').onclick=()=>panel.close();
 panel.addEventListener('click',e=>{if(e.target===panel){const r=panel.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)panel.close()}});
@@ -29,13 +29,14 @@ $('pendingList').onclick=e=>{const b=e.target.closest('[data-place]');if(b)shopE
 $('teamList').onclick=e=>{const b=e.target.closest('[data-hire]');if(b)hire(b.dataset.hire)};
 $('kitAccept').onclick=()=>{if(state.level<4||state.kitRequested)return;state.kitRequested=true;log('Pedido aceptado. La clienta vendrá cuando estén todos los productos.');syncScene();saveGame(false)};
 $('rescueBtn').onclick=rescue;
+$('paceToggle').onclick=()=>{state.speed=state.speed===1?4:1;saveGame(false);syncScene()};
 $('gameSpeed').onchange=e=>{state.speed=Number(e.target.value);saveGame(false);syncScene()};
 $('productFilter').onchange=()=>syncScene();
 document.querySelectorAll('[data-supplier]').forEach(b=>b.onclick=()=>{if(b.dataset.supplier==='wholesale'&&state.level<7)return;state.supplier=b.dataset.supplier;saveGame(false);syncScene()});
 document.querySelectorAll('[data-quantity]').forEach(b=>b.onclick=()=>{orderQuantity=Number(b.dataset.quantity);syncScene()});
 function syncScene(){
 document.querySelector('[data-section="team"]>p').textContent=ShopI18n.t('teamPhysical');
-$('gameSpeed').value=state.speed;$('gameHint').textContent='Toca tu tienda · v0.10 · ritmo ×'+state.speed;$('used').textContent=used();$('capacity').textContent=state.capacity;
+$('paceToggle').textContent='×'+state.speed;$('gameSpeed').value=state.speed;$('gameHint').textContent='Toca tu tienda · v0.11 · ritmo ×'+state.speed;$('used').textContent=used();$('capacity').textContent=state.capacity;
 const filter=$('productFilter').value,keys=Object.keys(products).filter(k=>unlocked(k)&&(filter==='all'||(filter==='fish'?products[k].vol===0:products[k].vol>0))).sort((a,b)=>products[b].level-products[a].level);
 $('stock').innerHTML=productRows(keys,true);
 $('supplierHelp').textContent=state.level<2?'El proveedor abre en el nivel 2. Empieza vendiendo el stock gratuito.':state.supplier==='local'?'Proveedor local · precio base · 30 s · sin mínimo.':'Mayorista · aproximadamente 15% menos · 90 s · mínimo 10 unidades de un producto.';

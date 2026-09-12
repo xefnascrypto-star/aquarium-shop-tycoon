@@ -7,11 +7,11 @@ function refresh(){const next=JSON.stringify([state.layout,Object.keys(ShopDesig
 function status(a){return ({entering:'Entra por la puerta.','to-product':'Busca '+(products[a.product]?.name||'su pedido')+'.',browsing:'Mira '+products[a.product]?.name+'.','to-queue':'Se acerca a la cola.',queue:'Espera su turno en caja.','to-counter':'Le toca: va a su puesto de caja.',checkout:'Su empleado prepara el cobro.','to-wait':ShopI18n.t('staffWaiting'),'service-queue':ShopI18n.t('staffWaiting'),'staff-working':ShopI18n.t('staffServing'),leaving:a.result?'Sale con '+a.result.name+' · '+a.result.amount+' monedas.':'Sale sin comprar. '+(a.reason||''),turning:a.reason,waiting:'Salida bloqueada. Abre un paso en el editor.'})[a.phase]||'Visita terminada.'}
 function details(){$('visitorSummary').textContent=actors.length+' visitantes · '+actors.filter(a=>['service-queue','staff-working'].includes(a.phase)).length+' en cola · '+(state.employee&&!state.employeeUnpaid?2:1)+' puestos de caja.';if(selected)$('visitorInfo').textContent=actors.includes(selected)?status(selected):'La visita ha terminado.'}
 function hasStock(basket){return Object.entries(basket).every(([k,q])=>state.stock[k]>=q)}
-function locations(a){return Object.fromEntries(Object.keys(a.basket).map(k=>[k,a.stops.find(s=>N.goods[object(a,s.objectId)?.kind]?.includes(k))?.objectId]))}
+function locations(a){if(a.locations)return a.locations;return Object.fromEntries(Object.keys(a.basket).map(k=>[k,a.stops.find(s=>N.goods[object(a,s.objectId)?.kind]?.includes(k))?.objectId]))}
 function available(a){const bins=locations(a);if(Object.entries(a.basket).some(([k,q])=>ShopLogistics.at(bins[k],k)-ShopStaff.reserved(k,a.id,bins[k])<q))return false;return Object.entries(a.basket).every(([k,q])=>ShopLogistics.exposed(k)-(state.kitRequested&&!a.kit?(ShopDesign.kit[k]||0):0)-(window.ShopMoments?.reserved(k,a.requestId)||0)-ShopStaff.reserved(k,a.id)>=q)}
-function itinerary(basket){let start=graph.grids.main.entrance;const stops=[];let counterId;
-for(const k of Object.keys(basket)){const p=ShopLogistics.plan(graph,k,'main',start,basket[k]);if(!p)return null;counterId=p.counterId;if(!stops.some(s=>s.objectId===p.objectId))stops.push({objectId:p.objectId,product:k});start=p.toProduct.at(-1)}
-return {stops,counterId};
+function itinerary(basket){let start=graph.grids.main.entrance;const stops=[],locations={};let counterId;
+for(const k of Object.keys(basket)){const p=ShopLogistics.plan(graph,k,'main',start,basket[k]);if(!p)return null;counterId=p.counterId;locations[k]=p.objectId;if(!stops.some(s=>s.objectId===p.objectId))stops.push({objectId:p.objectId,product:k});start=p.toProduct.at(-1)}
+return {stops,counterId,locations};
 }
 function spawn(){
 if(!state.identity)return;
@@ -30,7 +30,7 @@ else {
  if(!route&&!specific&&!kit){for(const k of Object.keys(products).filter(k=>unlocked(k)&&state.stock[k]>(state.kitRequested?(ShopDesign.kit[k]||0):0)+(window.ShopMoments?.reserved(k)||0))){const alternate=itinerary({[k]:1});if(alternate){basket={[k]:1};route=alternate;break}}}
  const stops=route?.stops||[];
 state.potential++;
-const a={id:++serial,name:names[(serial-1)%names.length],roomId:'main',basket,kit,specific,requestId:request?.id,stops,stop:0,product:stops[0]?.product||Object.keys(basket)[0],objectId:stops[0]?.objectId,counterId:route?.counterId,distance:0,facing:1,direction:null,motion:null,motionIndex:0,cell:{...g.entrance},position:{x:g.entrance.x+.5,y:g.entrance.y+.5},phase:'entering',remaining:.5,path:null,progress:0,result:null,paid:false,lost:false,reason:!hasStock(basket)||!Object.keys(basket).length?'Falta stock del producto que busca.':'No hay un recorrido completo al expositor y a caja.',revision,server:null,queueCell:null,ticket:null};
+const a={id:++serial,name:names[(serial-1)%names.length],roomId:'main',basket,kit,specific,requestId:request?.id,stops,locations:route?.locations,stop:0,product:stops[0]?.product||Object.keys(basket)[0],objectId:stops[0]?.objectId,counterId:route?.counterId,distance:0,facing:1,direction:null,motion:null,motionIndex:0,cell:{...g.entrance},position:{x:g.entrance.x+.5,y:g.entrance.y+.5},phase:'entering',remaining:.5,path:null,progress:0,result:null,paid:false,lost:false,reason:!hasStock(basket)||!Object.keys(basket).length?'Falta stock del producto que busca.':'No hay un recorrido completo al expositor y a caja.',revision,server:null,queueCell:null,ticket:null};
 attach(a);
 actors.push(a);
 }
@@ -92,7 +92,7 @@ for(const a of actors){
 const layer=$('furnitureLayer'),items=[...layer.querySelectorAll(':scope > [data-instance]')].map(node=>{const o=state.layout.objects.find(o=>o.id===node.dataset.instance);return {node,bounds:M.footprint(o)}});
 items.push(...actors.map(a=>({node:a.node,bounds:{x:a.position.x-.28,y:a.position.y-.28,width:.56,depth:.56}})));
 items.push(...ShopStaff.draw());ShopLogistics.draw();
-for(const item of ShopDepth.sort(items))layer.append(item.node);details();
+const sorted=ShopDepth.sort(items);ShopStaffVisibility.update(sorted,ShopStaff.visualWorkers());for(const item of sorted)layer.append(item.node);details();
 }
 function tick(){const now=Date.now();let dt=Math.min(.1,Math.max(0,(now-lastFrame)/1000))*state.speed;lastFrame=now;if(paused||document.hidden||!state.identity||ShopIdentity.editing)return;refresh();
 while(dt>0){const step=Math.min(.05,dt);dt-=step;for(const a of [...actors])advance(a,step);ShopStaff.advance(step);arrival-=step;if(arrival<=0&&actors.length<(state.level>=9?7:3)){spawn();arrival=state.level>=9?3:8}}
@@ -117,6 +117,7 @@ function restore(saved){
  if(!Number.isInteger(a.id)||ids.has(a.id)||!phases.includes(a.phase)||!N.clear(graph.grids.main,a.position)||!Number.isFinite(a.distance)||!Number.isFinite(a.remaining)||!Number.isInteger(a.visualSeed))return false;ids.add(a.id);
  if(a.paid&&a.phase!=='leaving')return false;
  if(!a.basket||Object.entries(a.basket).some(([k,q])=>!Object.hasOwn(products,k)||!Number.isInteger(q)||q<1))return false;
+ if(a.locations&&Object.keys(a.basket).some(k=>!graph.grids.main.objects.some(o=>o.id===a.locations[k]&&N.goods[o.kind]?.includes(k))))return false;
  if(!Array.isArray(a.stops)||a.stops.some(s=>!graph.grids.main.objects.some(o=>o.id===s.objectId)||!products[s.product]))return false;
  if(a.motion&&(!Array.isArray(a.motion)||!a.motion.every((p,i)=>N.clear(graph.grids.main,p)&&(i===0||N.segmentClear(graph.grids.main,a.motion[i-1],p)))))return false;
  if(a.requestId&&!ShopMoments.valid(a.requestId)&&!a.paid&&!a.lost)return false;

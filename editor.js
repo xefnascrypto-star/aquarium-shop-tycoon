@@ -65,7 +65,7 @@
  function undo(){
   if(!history.length)return;
   // Ownership may change while editing; never restore an invalid unlocked footprint.
-  const candidate=history.pop();
+  const candidate=history.pop();Object.assign(candidate.rooms[0],M.dimensions(state));
   if(candidate.objects.some(o=>M.owned(o,state)&&M.validate(candidate,o,state))){$('editHelp').textContent='Ese cambio ya no se puede deshacer tras una mejora.';return}
   state.layout=candidate;draft=null;saveGame(false);refreshSelect();paint();window.dispatchEvent(new Event('layoutchange'));
  }

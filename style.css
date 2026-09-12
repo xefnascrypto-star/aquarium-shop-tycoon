@@ -83,3 +83,9 @@
 @media(prefers-reduced-motion:reduce){.live-worker .character-arm,.live-worker .character-head{animation:none!important}}
 
 @keyframes checkout-nod{from{transform:translateY(0)}to{transform:translateY(1.5px)}}
+
+.staff-occluder{opacity:.48;transition:opacity .18s ease-out}
+.live-worker .character-model>path{stroke:#467f70;stroke-width:1.2}
+.live-worker .purchase-bag{filter:drop-shadow(1px 1px 1px #3b695c55)}
+#emergencyHint{background:#fff0cc;color:#795b2c}
+#rewardDebug{padding:12px;border:1px dashed #89a691;border-radius:12px;margin-top:10px}

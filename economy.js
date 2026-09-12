@@ -1,6 +1,6 @@
 const products=ShopDesign.products;
 const $=id=>document.getElementById(id),fmt=n=>Math.floor(n).toLocaleString('es-ES');
-const initial=()=>({schema:6,serviceSession:null,identity:null,money:500,level:1,xp:0,served:0,capacity:20,pearls:0,stock:Object.fromEntries(Object.keys(products).map(k=>[k,({betta:5,comet:6,food:4,conditioner:3})[k]||0])),lastSeen:Date.now(),ordersVersion:1,orders:[],orderSerial:0,restocked:0,supplier:'local',supplierReceived:{local:0,wholesale:0},sold:{},placementRewarded:{},lost:0,potential:0,kits:0,kitRequested:false,groupSales:0,wageElapsed:0,wagesPaid:0,employee:null,speed:4,debt:0,investment:null});
+const initial=()=>({schema:6,presentationVersion:1,serviceSession:null,identity:null,money:500,level:1,xp:0,served:0,capacity:20,pearls:0,stock:Object.fromEntries(Object.keys(products).map(k=>[k,({betta:5,comet:6,food:4,conditioner:3})[k]||0])),lastSeen:Date.now(),ordersVersion:1,orders:[],orderSerial:0,restocked:0,supplier:'local',supplierReceived:{local:0,wholesale:0},sold:{},placementRewarded:{},lost:0,potential:0,kits:0,kitRequested:false,groupSales:0,wageElapsed:0,wagesPaid:0,employee:null,speed:1,debt:0,investment:null});
 let state=initial(),resetting=false;
 function unlocked(k){const p=products[k];return !!p&&state.level>=p.level&&(!p.investment||state[p.investment])}
 function used(){return Object.entries(state.stock).reduce((a,[k,v])=>a+v*(products[k]?.vol||0),0)}
@@ -45,7 +45,7 @@ function quote(k,q,supplier=state.supplier){return ShopOrders.quote(products,k,q
 function orderReason(k,q,supplier=state.supplier){
  const t=(key,params)=>ShopI18n.t(key,params),offer=quote(k,q,supplier);
  if(!unlocked(k)||![1,5,10,20].includes(q)||!offer)return t('orderUnavailable');
- if(state.level<offer.level)return t('orderSupplierLevel',{level:offer.level});
+ if(state.level<offer.level&&!(supplier==='local'&&k==='comet'&&q===1&&window.ShopRecovery?.lifeline()))return t('orderSupplierLevel',{level:offer.level});
  if(q<offer.minimum)return t('orderMinimum',{quantity:offer.minimum});
  if(state.money<offer.cost)return t('orderNoMoney');
  const volume=ShopOrders.space(products,k,q);
@@ -75,27 +75,29 @@ function buyUpgrade(k){
 const reason=upgradeReason(k);if(reason)return log(reason,'warn');const u=ShopDesign.upgrades[k];
 state.money-=u.cost;state[k]=true;
 if(k==='warehouse')state.capacity=50;if(k==='warehouse2')state.capacity=100;
-if(k==='expansion'){state.pearls+=10;state.layout.rooms[0].width=18;state.layout.rooms[0].depth=16}
+if(k==='expansion'){state.pearls+=10;Object.assign(state.layout.rooms[0],ShopLayout.dimensions(state))}
+if(k==='microWidth'||k==='microDepth')Object.assign(state.layout.rooms[0],ShopLayout.dimensions(state));
 if(u.kind){const o=state.layout.objects.find(o=>o.kind===u.kind);o.placed=false}
-if(state.level===10&&!state.investment)state.investment=k;
+if(state.level===10&&!state.investment&&['plants','professional','warehouse2'].includes(k))state.investment=k;
 state.xp+=30;log(u.name+(u.kind?' comprado. Elige dónde colocarlo.':' completado.'),'good');recalcLevel();render();window.dispatchEvent(new Event('layoutchange'));saveGame(false);
 if(u.kind)shopEditor.begin(state.layout.objects.find(o=>o.kind===u.kind).id);
 }
 function upgradeShelf(){buyUpgrade('shelf')}function upgradeTank(){buyUpgrade('tank3')}function upgradeWarehouse(){buyUpgrade('warehouse')}
 function hire(id){if(state.level<9||state.employee||!ShopDesign.employees[id])return;if(state.money<1500)return log('Necesitas 1.500 monedas','warn');state.money-=1500;state.employee=id;state.wageElapsed=0;state.xp+=30;log(ShopDesign.employees[id].name+' se incorpora al equipo','good');recalcLevel();render();saveGame(false)}
 function rescue(){if(incomingOrders().length||state.debt||state.money>=15||Object.entries(state.stock).some(([k,q])=>unlocked(k)&&q>0))return;state.stock.comet=1;state.debt=15;log('El proveedor te adelanta un Cometa. Devolverás 15 monedas al venderlo.');render();saveGame(false)}
-function saveGame(show=true){if(resetting||!state.identity||window.shopCirculation?.settling)return;if(window.shopCirculation?.serialize)state.serviceSession=shopCirculation.serialize();state.lastSeen=Date.now();try{localStorage.setItem('aquariumShopV01',JSON.stringify(state))}catch(e){if(show)log('No se ha podido guardar','warn');return}if(show)log('Partida guardada','good')}
+function saveGame(show=true){if(resetting||!state.identity||window.shopCirculation?.settling)return;if(window.shopCirculation?.serialize)state.serviceSession=shopCirculation.serialize();state.lastSeen=Date.now();try{localStorage.setItem('aquariumShopV01',JSON.stringify(state))}catch(e){if(show)log('No se ha podido guardar','warn');return}if(show)log('Partida guardada','good')
+}
 function load(){try{const raw=localStorage.getItem('aquariumShopV01');if(!raw)return;const old=JSON.parse(raw);state={...initial(),...old,stock:{...initial().stock,...old.stock},sold:old.sold||{},supplierReceived:{local:0,wholesale:0,...old.supplierReceived}};
 state.identity=ShopIdentity.normalize(old.identity);
 if(old.schema!==6){state.schema=6;state.xp=Math.max(0,state.served*10);state.shelf=true;state.speed=1;state.supplierReceived.local=old.restocked||0;state.stock.conditioner=3}
-state.level=Math.max(1,Math.min(10,Math.floor(state.level)||1));state.money=Math.max(0,Number(state.money)||0);state.speed=[1,4,12].includes(state.speed)?state.speed:1;
+state.level=Math.max(1,Math.min(10,Math.floor(state.level)||1));state.money=Math.max(0,Number(state.money)||0);state.speed=old.presentationVersion===1&&[1,4,12].includes(state.speed)?state.speed:1;state.presentationVersion=1;
 for(const k of Object.keys(products))state.stock[k]=Math.max(0,Math.floor(Number(state.stock[k])||0));
 Object.assign(state,ShopOrders.migrate(old,products,Date.now()));delete state.delivery;if(!Object.hasOwn(ShopOrders.providers,state.supplier))state.supplier='local';
 }catch(e){state=initial()}}
 function resetGame(){if(confirm('¿Empezar una partida nueva? Se borrará el progreso de este navegador.')){resetting=true;localStorage.removeItem('aquariumShopV01');location.reload()}}
 load();if(state.identity)ShopIdentity.set(state.identity);render();
 let lastEconomy=Date.now();
-setInterval(()=>{const now=Date.now(),dt=Math.min(.5,Math.max(0,(now-lastEconomy)/1000))*state.speed;lastEconomy=now;if(document.hidden||!state.identity||ShopIdentity.editing)return;deliveryTick(dt);window.ShopMoments?.tick(dt);
+setInterval(()=>{const now=Date.now(),dt=Math.min(.5,Math.max(0,(now-lastEconomy)/1000))*state.speed;lastEconomy=now;if(document.hidden||!state.identity||ShopIdentity.editing)return;deliveryTick(dt);window.ShopMoments?.tick(dt);window.ShopRecovery?.tick(dt/state.speed);
 if(state.employee&&!window.shopEditor?.active){state.wageElapsed+=dt;if(state.wageElapsed>=60){state.wageElapsed-=60;const wage=ShopDesign.employees[state.employee].wage;if(state.money>=wage){state.money-=wage;state.wagesPaid++;state.employeeUnpaid=false;recalcLevel();render();saveGame(false)}else {state.employeeUnpaid=true;log('No alcanza para el salario. El refuerzo espera al próximo pago.','warn');render()}}}
 },250);
 setInterval(()=>saveGame(false),5000);

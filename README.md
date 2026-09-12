@@ -1,4 +1,4 @@
-# Aquarium Shop Tycoon · v0.10
+# Aquarium Shop Tycoon · v0.11
 Demo cozy/isométrica de niveles 1–10. Jugar: https://xefnascrypto-star.github.io/aquarium-shop-tycoon/
 
 ## Recorrido jugable
@@ -6,7 +6,7 @@ Empieza con 500 monedas, dos acuarios, mostrador, stock gratuito y capacidad 20.
 - Nivel 2: estantería 250, proveedor local y primer pedido.
 - Nivel 3: acuario de 60 L 350, Guppy y Platy.
 - Nivel 4: filtro, calentador, luz, sifón y termómetro; pedido de acuario completo.
-- Nivel 5: ampliación 1.200, de 14 × 13 a 18 × 16 casillas; exige 25 ventas y un conjunto completo, concede 10 Perlas. Cuarto/quinto acuario y segunda estantería opcionales.
+- Nivel 5: ampliación 1.200, de 16 × 14 a 20 × 17 casillas, más las franjas compradas; exige 25 ventas y un conjunto completo, concede 10 Perlas. Cuarto/quinto acuario y segunda estantería opcionales.
 - Nivel 6: batería Agua Dulce I 2.000; Neón, Molly, Corydora y Ancistrus, con ventas en grupos.
 - Nivel 7: competencia entre proveedor local (precio base, 30 s, sin mínimo) y mayorista (aproximadamente 15% menos, 90 s, mínimo 10 del mismo producto). Lotes 1, 5, 10 o 20.
 - Nivel 8: compras perdidas por stock/acceso y Almacén I 4.000, capacidad 50.
@@ -14,7 +14,7 @@ Empieza con 500 monedas, dos acuarios, mostrador, stock gratuito y capacidad 20.
 - Nivel 10: Plantas I 12.000, batería profesional 14.000 o Almacén II 11.000 (capacidad 100). Elegir no bloquea las demás. Las dos exposiciones introducen Anubias y Discos, respectivamente.
 
 Los ascensos combinan XP, ventas mínimas e hitos comerciales. Llegar al nivel 10 exige además contratar, pagar un salario y reservar 12.000 monedas. El saldo no se ajusta artificialmente; completar tarde otros hitos puede dar una reserva mayor.
-Todos los precios, tiempos y cantidades son provisionales. No se implementan niveles 11–80 ni monetización.
+Todos los precios, tiempos y cantidades son provisionales. No se implementan niveles 11–80 ni publicidad real.
 
 ## Editor y circulación
 Cada mueble comprado queda pendiente hasta confirmar su colocación. Cancelar y recargar conservan la compra. Deshacer restaura la distribución sin devolver dinero ni repetir XP. Hueco sugiere una posición con acceso, que el jugador debe confirmar.
@@ -24,7 +24,7 @@ Desde nivel 8, una cuarta parte de los clientes intenta comprar un producto conc
 Los visitantes pueden compartir casillas mientras caminan: la cola asigna turnos y puestos, pero todavía no hay colisión entre personas.
 
 ## Tiempo y guardado
-Partidas nuevas a ritmo ×4; Ajustes permite ×1, ×4 o ×12. Acelera clientes, entregas y salarios por igual, sin regalar progreso. Los tiempos se muestran en segundos de juego.
+Partidas nuevas a ritmo ×1; al migrar a v0.11 también se inicia una vez en ×1; Ajustes permite ×1, ×4 o ×12. Acelera clientes, entregas y salarios por igual, sin regalar progreso. Los tiempos se muestran en segundos de juego.
 Al ocultar/cerrar se pausa la simulación. Editar pausa visitas y salarios, mientras continúan entregas. Sin fondos para un salario, el refuerzo termina el encargo iniciado y no acepta otro hasta poder cobrar.
 Un Cometa adelantado por el proveedor, con deuda de 15 a devolver en la siguiente venta, evita quedar sin forma de reponer cuando no queda stock, entrega ni saldo suficiente.
 
@@ -89,3 +89,17 @@ Se atienden primero solicitudes de venta que pueden prepararse, después reposic
 Editar cancela recorridos sin perder ni duplicar mercancía. Guardar y recargar conserva stock por expositor y tareas en curso. Las partidas v0.9 se migran conservando todas sus unidades; el stock inicial se distribuye y el sobrante espera reposición automática.
 Los estados habituales usan pequeños símbolos y animaciones, sin textos constantes. Los clientes salen con su bolsa tras pagar. Los personajes siguen separados del dibujo para sustituir assets más adelante.
 Pruebas específicas: logistics.test.cjs (entregas simultáneas, dos empleados, reposición, guardado en cuatro fases, cancelación, recepción bloqueada, distancias y pasillo estrecho), staff.test.cjs (movimiento real en tres distribuciones), más las regresiones de pedidos, identidad, eventos, economía y progresión. Informes v010 y capturas se guardan junto al proyecto; backup externo en D:\chatgpt\99_Backups.
+
+
+## Consolidación v0.11
+- Local inicial: 16 × 14, 224 casillas (+23,1% respecto a v0.10). Se conservan las colocaciones válidas de partidas anteriores. La disposición de partidas nuevas separa más los acuarios, caja y recepción.
+- Franja lateral: nivel 2, 180 monedas, una columna. Franja del fondo: nivel 3, 260 monedas, una fila. Cada una se paga una sola vez; sus casillas se añaden también al local grande. La ampliación principal conserva nivel, hitos y precio y lleva el local base a 20 × 17; con ambas franjas, 21 × 18.
+- Recuperación: 1 moneda cada 60 segundos activos reales, hasta alcanzar 15 monedas en recursos recuperables. Se cuentan saldo, stock utilizable y pedidos en tránsito; ocultar stock o bloquear un acuario no activa ayuda. El stock sin expositor comprado no impide recuperar el negocio. Hay compra individual de Cometa para reiniciar incluso en nivel 1; se conserva el anticipo anterior.
+- Recompensa voluntaria simulada: hasta 10 monedas, solo con menos de 30 en recursos, espera de 30 minutos activos y máximo 2 por hora activa. Cancelar, cerrar o recargar no concede nada. Repetir una confirmación no vuelve a pagar. No hay SDK, AdMob, anuncios reales, obligatorios ni interstitials.
+- Las ayudas no se multiplican con ×4/×12 y no generan XP ni ventas. No acumulan tiempo con el juego cerrado. Parámetros provisionales centralizados en design.js.
+- Empleados: marcha 1,8 casillas/s, preparación de pez 3 s, productos 1,1 s. Caja conserva 6/3,5/5 s. Personaje y bolsa más legibles; muebles que ocultan a un empleado trabajando se vuelven semitransparentes. Esto solo afecta al dibujo, nunca al camino ni a las huellas. El ritmo se ve y se cambia junto al zoom.
+- Observación móvil de una venta a ×1: la v0.10 tardaba unos 1,25 s por trayecto; la nueva disposición tarda aproximadamente 4 s de ida, 3 s preparando y 4 s de vuelta. Se revisaron capturas de preparación, transporte y caja, además de las posiciones.
+- Cada producto del pedido conserva su expositor exacto; esto corrige pedidos completos con comida en mostrador y equipo en estantería.
+Pruebas nuevas: recovery-model.test.cjs, recovery.test.cjs, space-staff.test.cjs y mixed-kit.test.cjs. Continúan las pruebas de proveedores, stock físico, guardado, identidad, eventos, geometría y progresión 1–10. Los informes y capturas de esta versión llevan v011.
+
+Prueba adicional de ampliación: `node expansion.test.cjs`. Verifica ventas y movimiento en casillas recién compradas, límites antes/después y guardado sin cambios de stock. Los costes, tamaños y decisiones de arquitectura están en ARCHITECTURE.md.

@@ -17,7 +17,7 @@ ${hit('door','Puerta · información de clientes',`<g transform="translate(735 1
 <g id="deliveryArt"></g></g><g id="saleEffect"></g>`;
 
 function drawRoom(room){
-document.body.classList.toggle('expanded',room.width>14);
+document.body.classList.toggle('expanded',room.width>17);
 const A=ShopLayout.project(room,0,0),B=ShopLayout.project(room,room.width,0),C=ShopLayout.project(room,room.width,room.depth),D=ShopLayout.project(room,0,room.depth);
 const pt=p=>p.x+','+p.y,raise=p=>({x:p.x,y:p.y-187}),down=p=>({x:p.x,y:p.y+18});
 document.getElementById('roomShell').innerHTML='<ellipse cx="'+C.x+'" cy="'+(C.y-70)+'" rx="'+room.width*29+'" ry="158" fill="#91b6a0" opacity=".17"/>'+poly([D,C,down(C),down(D)].map(pt).join(' '),'#cbb997')+poly([C,B,down(B),down(C)].map(pt).join(' '),'#c2ad89')+'<g transform="matrix(1 .5 -1 .5 '+A.x+' '+A.y+')"><rect width="'+room.width*30+'" height="'+room.depth*30+'" fill="url(#tiles)"/></g>'+poly([D,raise(D),raise(A),A].map(pt).join(' '),'url(#wall)')+poly([raise(A),raise(B),B,A].map(pt).join(' '),'#c8dac2')+'<polyline points="'+[raise(D),raise(A),raise(B)].map(pt).join(' ')+'" fill="none" stroke="#83a792" stroke-width="12"/>';

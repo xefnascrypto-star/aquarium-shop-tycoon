@@ -1,0 +1,122 @@
+[
+  {
+    "t": 0,
+    "phase": "idle",
+    "position": {
+      "x": 7.5,
+      "y": 9.5
+    },
+    "carry": null,
+    "sold": 0
+  },
+  {
+    "t": 5.5,
+    "phase": "to-product",
+    "position": {
+      "x": 7.5,
+      "y": 9.384799999999998
+    },
+    "carry": null,
+    "sold": 0
+  },
+  {
+    "t": 9.5,
+    "phase": "preparing-fish",
+    "position": {
+      "x": 5.5,
+      "y": 4.5
+    },
+    "carry": null,
+    "sold": 0
+  },
+  {
+    "t": 12.5,
+    "phase": "carrying-order",
+    "position": {
+      "x": 5.5,
+      "y": 4.874400000000005
+    },
+    "carry": "fish",
+    "sold": 0
+  },
+  {
+    "t": 16.25,
+    "phase": "at-counter",
+    "position": {
+      "x": 7.5,
+      "y": 9.5
+    },
+    "carry": "fish",
+    "sold": 0
+  },
+  {
+    "t": 16.5,
+    "phase": "checkout",
+    "position": {
+      "x": 7.5,
+      "y": 9.5
+    },
+    "carry": "fish",
+    "sold": 0
+  },
+  {
+    "t": 22.5,
+    "phase": "to-product",
+    "position": {
+      "x": 7.5,
+      "y": 9.096799999999995
+    },
+    "carry": null,
+    "sold": 1
+  },
+  {
+    "t": 26.25,
+    "phase": "preparing-fish",
+    "position": {
+      "x": 5.5,
+      "y": 4.5
+    },
+    "carry": null,
+    "sold": 1
+  },
+  {
+    "t": 29.25,
+    "phase": "carrying-order",
+    "position": {
+      "x": 5.5,
+      "y": 4.672800000000002
+    },
+    "carry": "fish",
+    "sold": 1
+  },
+  {
+    "t": 33,
+    "phase": "at-counter",
+    "position": {
+      "x": 7.5,
+      "y": 9.5
+    },
+    "carry": "fish",
+    "sold": 1
+  },
+  {
+    "t": 33.25,
+    "phase": "checkout",
+    "position": {
+      "x": 7.5,
+      "y": 9.5
+    },
+    "carry": "fish",
+    "sold": 1
+  },
+  {
+    "t": 39.25,
+    "phase": "to-product",
+    "position": {
+      "x": 7.5,
+      "y": 9.298399999999997
+    },
+    "carry": null,
+    "sold": 2
+  }
+]
