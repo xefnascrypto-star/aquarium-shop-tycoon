@@ -1,10 +1,10 @@
 {
   "name": "aquarium-shop-tycoon",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "private": true,
   "scripts": {
     "preview": "node preview.cjs",
-    "test": "node expansion.test.cjs && node migration-v011.test.cjs && node strip-undo.test.cjs && node recovery-model.test.cjs && node mixed-kit.test.cjs && node recovery.test.cjs && node space-staff.test.cjs && node logistics.test.cjs && node orders-model.test.cjs && node orders.test.cjs && node identity.test.cjs && node model.test.cjs && node polish-model.test.cjs && node moments.test.cjs && node safeguards.test.cjs && node slice.test.cjs"
+    "test": "node cargo-model.test.cjs && node cargo-sales.test.cjs && node cargo-legacy.test.cjs && node expansion.test.cjs && node migration-v011.test.cjs && node strip-undo.test.cjs && node recovery-model.test.cjs && node mixed-kit.test.cjs && node recovery.test.cjs && node space-staff.test.cjs && node logistics.test.cjs && node orders-model.test.cjs && node orders.test.cjs && node identity.test.cjs && node model.test.cjs && node polish-model.test.cjs && node moments.test.cjs && node safeguards.test.cjs && node slice.test.cjs"
   },
   "devDependencies": {
     "playwright": "1.62.1"

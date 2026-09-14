@@ -38,7 +38,7 @@ function pickup(w){
  w.objectId=o.id;
  return route(w,goals,'to-product');
 }
-function release(w){w.restock=null;w.job=null;w.carry=null;w.stop=0;w.objectId=null;w.remaining=0;const s=station(w);if(!s||!route(w,[s.cell],'returning')){w.path=null;w.motion=null;w.phase='blocked'}}
+function release(w){ShopLogistics.returnTransport(w.transportId);w.transportId=null;w.restock=null;w.job=null;w.carry=null;w.stop=0;w.objectId=null;w.remaining=0;const s=station(w);if(!s||!route(w,[s.cell],'returning')){w.path=null;w.motion=null;w.phase='blocked'}}
 function cancel(w){const a=context.actor(w.job);w.job=null;release(w);if(a&&!a.paid)context.fail(a,ShopI18n.t('staffBlocked'))}
 function ensure(){
  const defs=definitions();
@@ -55,7 +55,7 @@ function ensure(){
  if(!station(w)&&!w.job){const s=all.find(s=>!workers.some(v=>v!==w&&v.counterId===s.counterId&&v.stationIndex===s.index));if(s){w.counterId=s.counterId;w.stationIndex=s.index;route(w,[s.cell],'returning')}}
  }
 }
-function reserved(k,except,objectId){if(!context)return 0;return workers.reduce((sum,w)=>{const a=context.actor(w.job);return sum+(a&&!a.paid&&a.id!==except&&!a.kit&&!a.requestId&&(!objectId||(a.locations?a.locations[k]===objectId:a.stops.some(s=>s.objectId===objectId&&N.goods[g().objects.find(o=>o.id===s.objectId)?.kind]?.includes(k))))?(a.basket[k]||0):0)},0)}
+function reserved(k,except,objectId){if(!context)return 0;return workers.reduce((sum,w)=>{const a=context.actor(w.job);return sum+(a&&!a.paid&&a.id!==except&&!a.kit&&!a.requestId&&(!objectId||(a.locations?a.locations[k]===objectId:a.stops.some(s=>s.objectId===objectId&&N.goods[g().objects.find(o=>o.id===s.objectId)?.kind]?.includes(k))))?(Math.max(0,(a.basket[k]||0)-(objectId?ShopLogistics.carried(a.id,k,objectId):0))):0)},0)}
 function assign(){
  for(const a of context.waiting()){
  if(!context.available(a)){if(Object.entries(a.basket).some(([k,q])=>(state.stock[k]||0)<q))context.fail(a,ShopI18n.t('staffNoStock'));else if(a.waitTime>35)context.fail(a,ShopI18n.t('staffRestockLate'));continue}
@@ -93,18 +93,19 @@ function advance(dt){
  }
  if(w.phase==='preparing-fish'||w.phase==='preparing-product'){
  w.remaining-=dt;if(w.remaining>0)continue;
- const a=context.actor(w.job);if(!a||!context.available(a)){cancel(w);continue}
+ const a=context.actor(w.job);if(!a||!context.available(a)||!ShopLogistics.collect(w,a,a.stops[w.stop].objectId)){cancel(w);continue}
  if(w.phase==='preparing-fish')w.carry='fish';else if(!w.carry)w.carry='goods';
  w.stop++;
  if(w.stop<a.stops.length){if(!pickup(w))cancel(w)}
  else {const s=station(w);if(!s||!route(w,[s.cell],'carrying-order'))cancel(w);else context.ready(a,w)}
+ render();saveGame(false);
  }
  }
  assign();restockAssign();
 }
 function ready(id,customerId){const w=workers.find(w=>w.id===id&&w.job===customerId);if(!w||!['at-counter','checkout'].includes(w.phase))return false;const s=station(w);if(!s||N.key(s.cell)!==N.key(w.cell))return false;w.phase='checkout';return true}
 function complete(id){const w=workers.find(w=>w.job===id);if(w)release(w)}
-function reset(){for(const w of workers)w.node.remove();workers.length=0}
+function reset(){ShopLogistics.returnAll();for(const w of workers)w.node.remove();workers.length=0}
 function draw(){
  for(const w of workers){
  const label=ShopI18n.t(({idle:'staffIdle',returning:'staffReturning','to-product':'staffServing','preparing-fish':'staffFish','preparing-product':'staffProduct','carrying-order':'staffCarrying','at-counter':'staffTill',checkout:'staffTill',blocked:'staffBlocked','to-receipt':'staffReceipt','collecting-stock':'staffCollect','carrying-stock':'staffRestockCarry',restocking:'staffRestock'})[w.phase]);
@@ -131,7 +132,21 @@ function restore(data,actors){
  if(new Set(data.filter(w=>w.job!==null).map(w=>w.job)).size!==data.filter(w=>w.job!==null).length)return false;
  for(const k of Object.keys(products))if(data.reduce((n,w)=>n+(w.restock?.k===k?w.restock.q:0),0)>ShopLogistics.stored(k))return false;
  const keys=data.filter(w=>w.restock).map(w=>w.restock.objectId+':'+w.restock.k);if(new Set(keys).size!==keys.length)return false;
- reset();for(const raw of data){const w=JSON.parse(JSON.stringify(raw));w.profile=definitions().find(d=>d.id===w.id);createNode(w);workers.push(w)}return true;
+ const manifests=state.logistics.transports;
+ for(const [id,t] of Object.entries(manifests)){
+  const w=data.find(w=>w.transportId===id&&w.id===t.workerId&&w.job===t.saleId),a=actors.find(a=>a.id===t.saleId&&!a.paid);
+  if(!w||!a||!a.locations||w.restock||!['preparing-fish','preparing-product','to-product','carrying-order','at-counter','checkout'].includes(w.phase))return false;
+  if(t.items.some(i=>a.locations[i.k]!==i.objectId||i.q!==a.basket[i.k]))return false;
+  if(new Set(t.items.map(i=>i.k)).size!==t.items.length)return false;
+ }
+ for(const w of data){
+  if(w.transportId&&!manifests[w.transportId])return false;
+  const a=actors.find(a=>a.id===w.job);if(!a)continue;
+  const expected=a.stops.slice(0,w.stop).map(s=>s.objectId);
+  for(const [k,q] of Object.entries(a.basket))if(ShopLogistics.carried(a.id,k,a.locations?.[k])!==(expected.includes(a.locations?.[k])?q:0))return false;
+  if(['carrying-order','at-counter','checkout'].includes(w.phase)&&!ShopLogistics.saleTransport(a.id,a.basket,a.locations))return false;
+ }
+ for(const w of workers)w.node.remove();workers.length=0;for(const raw of data){const w=JSON.parse(JSON.stringify(raw));w.profile=definitions().find(d=>d.id===w.id);createNode(w);workers.push(w)}return true;
 }
 return {init(api){context=api},ensure,advance,ready,complete,reserved,draw,reset,restore,serialize,snapshot:serialize,visualWorkers:()=>workers,occupied:()=>workers.map(w=>({...w.cell,roomId:'main'}))};
 })();

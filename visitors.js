@@ -8,7 +8,7 @@ function status(a){return ({entering:'Entra por la puerta.','to-product':'Busca 
 function details(){$('visitorSummary').textContent=actors.length+' visitantes · '+actors.filter(a=>['service-queue','staff-working'].includes(a.phase)).length+' en cola · '+(state.employee&&!state.employeeUnpaid?2:1)+' puestos de caja.';if(selected)$('visitorInfo').textContent=actors.includes(selected)?status(selected):'La visita ha terminado.'}
 function hasStock(basket){return Object.entries(basket).every(([k,q])=>state.stock[k]>=q)}
 function locations(a){if(a.locations)return a.locations;return Object.fromEntries(Object.keys(a.basket).map(k=>[k,a.stops.find(s=>N.goods[object(a,s.objectId)?.kind]?.includes(k))?.objectId]))}
-function available(a){const bins=locations(a);if(Object.entries(a.basket).some(([k,q])=>ShopLogistics.at(bins[k],k)-ShopStaff.reserved(k,a.id,bins[k])<q))return false;return Object.entries(a.basket).every(([k,q])=>ShopLogistics.exposed(k)-(state.kitRequested&&!a.kit?(ShopDesign.kit[k]||0):0)-(window.ShopMoments?.reserved(k,a.requestId)||0)-ShopStaff.reserved(k,a.id)>=q)}
+function available(a){const bins=locations(a);if(Object.entries(a.basket).some(([k,q])=>ShopLogistics.at(bins[k],k)+ShopLogistics.carried(a.id,k,bins[k])-ShopStaff.reserved(k,a.id,bins[k])<q))return false;return Object.entries(a.basket).every(([k,q])=>ShopLogistics.exposed(k)+ShopLogistics.transported(k)-(state.kitRequested&&!a.kit?(ShopDesign.kit[k]||0):0)-(window.ShopMoments?.reserved(k,a.requestId)||0)-ShopStaff.reserved(k,a.id)>=q)}
 function itinerary(basket){let start=graph.grids.main.entrance;const stops=[],locations={};let counterId;
 for(const k of Object.keys(basket)){const p=ShopLogistics.plan(graph,k,'main',start,basket[k]);if(!p)return null;counterId=p.counterId;locations[k]=p.objectId;if(!stops.some(s=>s.objectId===p.objectId))stops.push({objectId:p.objectId,product:k});start=p.toProduct.at(-1)}
 return {stops,counterId,locations};
@@ -108,10 +108,10 @@ window.addEventListener('layoutchange',refresh);window.addEventListener('statech
 document.addEventListener('visibilitychange',()=>lastFrame=Date.now());
 function serialize(){
  if(paused||window.shopEditor?.active||!state.identity)return null;
- return {version:1,signature,employee:state.employee,serial,taskSerial,arrival,actors:actors.map(({node,...a})=>JSON.parse(JSON.stringify(a))),workers:ShopStaff.serialize()};
+ return {version:1,transportVersion:1,signature,employee:state.employee,serial,taskSerial,arrival,actors:actors.map(({node,...a})=>JSON.parse(JSON.stringify(a))),workers:ShopStaff.serialize()};
 }
 function restore(saved){
- if(!saved||saved.version!==1||saved.signature!==signature||saved.employee!==state.employee||!Array.isArray(saved.actors)||saved.actors.length>7)return false;
+ if(!saved||saved.version!==1||saved.transportVersion!==1||saved.signature!==signature||saved.employee!==state.employee||!Array.isArray(saved.actors)||saved.actors.length>7)return false;
  const ids=new Set(),phases=['entering','to-product','browsing','to-wait','service-queue','staff-working','to-counter','checkout','leaving','turning','waiting'];
  for(const a of saved.actors){
  if(!Number.isInteger(a.id)||ids.has(a.id)||!phases.includes(a.phase)||!N.clear(graph.grids.main,a.position)||!Number.isFinite(a.distance)||!Number.isFinite(a.remaining)||!Number.isInteger(a.visualSeed))return false;ids.add(a.id);

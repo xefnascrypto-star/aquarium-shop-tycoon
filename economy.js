@@ -29,8 +29,13 @@ function sellBasket(basket,options={}){
 const entries=Object.entries(basket),isKit=state.kitRequested&&entries.length===Object.keys(ShopDesign.kit).length&&entries.every(([k,q])=>ShopDesign.kit[k]===q);
 if(options.requestId&&!window.ShopMoments?.valid(options.requestId))return null;
 if(!entries.length||entries.some(([k,q])=>!unlocked(k)||!Number.isInteger(q)||q<1||(state.stock[k]||0)<q||((state.stock[k]-q)<((state.kitRequested&&!isKit?(ShopDesign.kit[k]||0):0)+(window.ShopMoments?.reserved(k,options.requestId)||0)+(window.ShopStaff?.reserved(k,options.visitorId)||0)))))return null;
-if(window.ShopLogistics&&entries.some(([k,q])=>(options.locations?ShopLogistics.at(options.locations[k],k):ShopLogistics.exposed(k))<q))return null;
-window.ShopLogistics?.take(basket,options.locations);
+if(options.visitorId!==undefined){
+ if(!window.ShopLogistics?.saleTransport(options.visitorId,basket,options.locations))return null;
+ ShopLogistics.consume(options.visitorId);
+}else{
+ if(window.ShopLogistics&&entries.some(([k,q])=>(options.locations?ShopLogistics.at(options.locations[k],k):ShopLogistics.exposed(k))<q))return null;
+ window.ShopLogistics?.take(basket,options.locations);
+}
 let amount=0;for(const [k,q] of entries){state.stock[k]-=q;amount+=products[k].sell*q;state.sold[k]=(state.sold[k]||0)+q}
 const repayment=Math.min(state.debt,amount);state.debt-=repayment;state.money+=amount-repayment;state.served++;state.xp+=entries.reduce((n,[k,q])=>n+10*q,0);
 if(isKit){state.kits++;state.kitRequested=false}if(entries.some(([k,q])=>['neon','molly','cory','ancistrus'].includes(k)&&q>1))state.groupSales++;

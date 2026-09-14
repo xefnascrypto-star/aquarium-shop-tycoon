@@ -1,0 +1,11 @@
+const fs=require('fs'),vm=require('vm'),assert=require('node:assert/strict'),M=require('./layout-model.js'),N=require('./navigation.js'),D=require('./design.js');
+const state={stock:{betta:3},layout:M.create(),logistics:{version:1,bins:{'betta-1':{betta:2},'tank-4':{betta:1}}},tank4:true,expansion:true};Object.assign(state.layout.rooms[0],M.dimensions(state));Object.assign(state.layout.objects.find(o=>o.id==='tank-4'),{placed:true,x:14,y:10});
+const window={addEventListener(){}};vm.runInNewContext(fs.readFileSync('logistics.js','utf8'),{window,state,products:D.products,ShopNavigation:N,ShopLayout:M,unlocked:()=>true,document:{querySelector:()=>null}});const L=window.ShopLogistics;L.ensure();
+const w={id:0},a={id:77,basket:{betta:1},locations:{betta:'tank-4'}};
+assert.equal(L.collect(w,a,'tank-4'),true);assert.equal(L.at('betta-1','betta'),2);assert.equal(L.at('tank-4','betta'),0);assert.equal(L.transported('betta'),1);assert.equal(L.stored('betta'),0);assert.equal(state.stock.betta,3);assert.equal(L.collect(w,a,'tank-4'),false);assert.equal(L.transported('betta'),1);
+assert.equal(L.candidates(N.build(state.layout,state).grids.main,[],[]).length,0,'bag is not restock supply');
+assert.equal(L.saleTransport(a.id,a.basket,{betta:'betta-1'}),null,'wrong source rejected');assert.ok(L.saleTransport(a.id,a.basket,a.locations));
+L.returnTransport(w.transportId);L.returnTransport(w.transportId);assert.equal(L.at('tank-4','betta'),1);assert.equal(L.transported('betta'),0);assert.equal(state.stock.betta,3);
+assert.equal(L.collect(w,a,'tank-4'),true);state.layout.objects.find(o=>o.id==='tank-4').placed=false;L.returnAll();assert.equal(L.stored('betta'),1);assert.equal(L.exposed('betta'),2);
+L.ensure();assert.equal(L.stored('betta')+L.exposed('betta')+L.transported('betta'),state.stock.betta);
+console.log('PASS exact source, repeated pickup/return, missing source, inventory identity and no restock from bags');

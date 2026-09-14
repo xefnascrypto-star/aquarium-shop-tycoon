@@ -10,13 +10,46 @@ function ensure(){
   const g=graph();for(const k of Object.keys(products)){const o=g.objects.find(o=>N.goods[o.kind]?.includes(k));if(o)bin(o.id)[k]=Math.min(state.stock[k]||0,limit(k))}
  }
  if(!state.logistics.bins||typeof state.logistics.bins!=='object'||Array.isArray(state.logistics.bins))state.logistics.bins={};
+ if(!state.logistics.transports||typeof state.logistics.transports!=='object'||Array.isArray(state.logistics.transports))state.logistics.transports={};
+ // Invalid manifests are released to stored stock; total ownership remains authoritative.
+ const remaining={...state.stock};
+ for(const [id,t] of Object.entries(state.logistics.transports)){
+  if(!t||!Number.isInteger(t.workerId)||!Number.isInteger(t.saleId)||!Array.isArray(t.items)||!t.items.length||t.items.some(i=>!i||!products[i.k]||!Number.isInteger(i.q)||i.q<1||typeof i.objectId!=='string')){delete state.logistics.transports[id];continue}
+  const sums={};for(const i of t.items)sums[i.k]=(sums[i.k]||0)+i.q;
+  if(Object.entries(sums).some(([k,q])=>q>(remaining[k]||0))){delete state.logistics.transports[id];continue}
+  for(const [k,q] of Object.entries(sums))remaining[k]-=q;
+ }
  const g=graph();for(const [id,items] of Object.entries(state.logistics.bins)){const o=g.objects.find(o=>o.id===id);if(!o||!items||typeof items!=='object'||Array.isArray(items)){delete state.logistics.bins[id];continue}for(const k of Object.keys(items))if(!N.goods[o.kind]?.includes(k))delete items[k]}
- for(const k of Object.keys(products)){let left=state.stock[k]||0;for(const items of Object.values(state.logistics.bins)){items[k]=Math.min(left,Math.max(0,Math.floor(Number(items[k])||0)));left-=items[k]}}
+ for(const k of Object.keys(products)){let left=Math.max(0,(state.stock[k]||0)-transported(k));for(const items of Object.values(state.logistics.bins)){items[k]=Math.min(left,Math.max(0,Math.floor(Number(items[k])||0)));left-=items[k]}}
 }
 const limit=k=>products[k]?.vol===0?6:4;
 function bin(id){return state.logistics.bins[id]||(state.logistics.bins[id]={})}
 function exposed(k){return Object.values(state.logistics?.bins||{}).reduce((s,b)=>s+(b[k]||0),0)}
-function stored(k){return Math.max(0,(state.stock[k]||0)-exposed(k))}
+function stored(k){return Math.max(0,(state.stock[k]||0)-exposed(k)-transported(k))}
+function transported(k){return Object.values(state.logistics?.transports||{}).reduce((n,t)=>n+t.items.reduce((s,i)=>s+(i.k===k?i.q:0),0),0)}
+function carried(saleId,k,objectId){return Object.values(state.logistics?.transports||{}).filter(t=>t.saleId===saleId).reduce((n,t)=>n+t.items.reduce((s,i)=>s+(i.k===k&&(!objectId||i.objectId===objectId)?i.q:0),0),0)}
+function collect(w,a,objectId){
+ const items=Object.entries(a.basket).filter(([k])=>a.locations?.[k]===objectId).map(([k,q])=>({k,q:q-carried(a.id,k,objectId),objectId})).filter(i=>i.q>0);
+ if(!items.length)return false;
+ if(items.some(i=>at(objectId,i.k)<i.q))return false;
+ const id='sale-'+a.id,old=state.logistics.transports[id];
+ if(old&&(old.workerId!==w.id||old.saleId!==a.id))return false;
+ const t=old||{workerId:w.id,saleId:a.id,items:[]};
+ for(const i of items){bin(objectId)[i.k]-=i.q;t.items.push(i)}
+ state.logistics.transports[id]=t;w.transportId=id;return true;
+}
+function saleTransport(saleId,basket,locations){
+ const t=state.logistics?.transports?.['sale-'+saleId];if(!t||t.saleId!==saleId)return null;
+ if(t.items.some(i=>!Object.hasOwn(basket,i.k)||locations?.[i.k]!==i.objectId))return null;
+ return Object.entries(basket).every(([k,q])=>t.items.filter(i=>i.k===k).reduce((n,i)=>n+i.q,0)===q)?t:null;
+}
+function consume(saleId){delete state.logistics.transports['sale-'+saleId]}
+function returnTransport(id){
+ const t=state.logistics?.transports?.[id];if(!t)return;
+ delete state.logistics.transports[id];const objects=graph().objects;
+ for(const i of t.items){const o=objects.find(o=>o.id===i.objectId&&N.goods[o.kind]?.includes(i.k));if(o)bin(o.id)[i.k]=(bin(o.id)[i.k]||0)+i.q}
+}
+function returnAll(){for(const id of Object.keys(state.logistics?.transports||{}))returnTransport(id)}
 function at(id,k){return state.logistics?.bins[id]?.[k]||0}
 function take(basket,locations={}){for(const [k,q] of Object.entries(basket)){let left=q;for(const b of (locations[k]?[bin(locations[k])]:Object.values(state.logistics.bins))){const n=Math.min(left,b[k]||0);b[k]=(b[k]||0)-n;left-=n}}}
 function plan(graph,k,room='main',start,q=1){
@@ -46,7 +79,7 @@ function commit(task){
 }
 function receipt(g){return g.objects.find(o=>o.kind==='warehouse')}
 function reachable(g,o){const r=receipt(g);if(!r)return false;const start=N.route(g,g.entrance,N.staffServices(g,r))?.at(-1);return !!start&&!!N.route(g,start,N.staffServices(g,o))}
-function feedback(k){if(exposed(k)>0)return '';if(stored(k)>0){const g=graph();return g.objects.some(o=>N.goods[o.kind]?.includes(k)&&reachable(g,o))?'Reposición pendiente':'Reposición bloqueada · revisa los accesos'}return 'Sin stock · pide al proveedor'}
+function feedback(k){if(exposed(k)>0)return '';if(transported(k)>0&&stored(k)===0)return 'En preparación para un cliente';if(stored(k)>0){const g=graph();return g.objects.some(o=>N.goods[o.kind]?.includes(k)&&reachable(g,o))?'Reposición pendiente':'Reposición bloqueada · revisa los accesos'}return 'Sin stock · pide al proveedor'}
 function draw(){
  if(!state.logistics)return;
  const node=document.querySelector('[data-instance="warehouse-1"] .receipt-load');if(!node)return;
@@ -56,5 +89,5 @@ function draw(){
  node.setAttribute('aria-label','Recepción: '+fish+' peces en transporte y '+goods+' productos pendientes');
 }
 window.addEventListener('statechange',draw);
-return {ensure,limit,exposed,stored,at,take,plan,candidates,commit,receipt,reachable,feedback,draw};
+return {ensure,limit,exposed,stored,transported,carried,collect,saleTransport,consume,returnTransport,returnAll,at,take,plan,candidates,commit,receipt,reachable,feedback,draw};
 })();

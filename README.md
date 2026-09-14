@@ -1,4 +1,4 @@
-# Aquarium Shop Tycoon · v0.11
+# Aquarium Shop Tycoon · v0.12
 Demo cozy/isométrica de niveles 1–10. Jugar: https://xefnascrypto-star.github.io/aquarium-shop-tycoon/
 
 ## Recorrido jugable
@@ -103,3 +103,8 @@ Pruebas específicas: logistics.test.cjs (entregas simultáneas, dos empleados, 
 Pruebas nuevas: recovery-model.test.cjs, recovery.test.cjs, space-staff.test.cjs y mixed-kit.test.cjs. Continúan las pruebas de proveedores, stock físico, guardado, identidad, eventos, geometría y progresión 1–10. Los informes y capturas de esta versión llevan v011.
 
 Prueba adicional de ampliación: `node expansion.test.cjs`. Verifica ventas y movimiento en casillas recién compradas, límites antes/después y guardado sin cambios de stock. Los costes, tamaños y decisiones de arquitectura están en ARCHITECTURE.md.
+
+
+## Publicación v0.12 — transporte de mercancía
+Publica el estado local validado el 13 de septiembre de 2026: mercancía asociada a la tarea del empleado desde la preparación hasta el cobro, sin doble descuento y con recuperación en cancelación/editor/carga. Suite completa 19/19, progresión 1–10 y revisión visual a ×1; dos empleados, último pez, pedido mixto y persistencia verificados.
+La publicación solo cambia identificación de versión y referencias de caché; no incorpora cambios funcionales adicionales. Se conservan economía, proveedores, navegación, ampliaciones y arte probado.
