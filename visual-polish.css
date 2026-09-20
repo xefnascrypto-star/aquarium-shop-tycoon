@@ -1,0 +1,21 @@
+/* Visual-only layer; all layout, visibility and interaction rules remain in style.css. */
+.polish-pass{background:radial-gradient(ellipse at 40% 20%,#f7fbef 0%,#e5f2ec 44%,#c6e2e0 100%);color:#244c50;font-family:ui-rounded,"Segoe UI",system-ui,sans-serif}
+.polish-pass .pill,.polish-pass .icon{background:linear-gradient(150deg,#fffef7,#eff4e8);border:1px solid #fff;box-shadow:0 3px 0 #93b9ab40,0 6px 16px #3b736c12}
+.polish-pass .pill b{color:#245a59;font-variant-numeric:tabular-nums}
+.polish-pass h1{color:#21585a;text-shadow:0 2px 0 #fff9;letter-spacing:-.8px}
+.polish-pass .heading small{color:#658880}
+.polish-pass .dock{background:linear-gradient(#ffffffed,#f0f5ebed);box-shadow:0 5px 0 #83aba42b,0 12px 30px #32696020;border:1px solid #fff}
+.polish-pass .dock button{color:#285f60}
+.polish-pass .dock button:hover{background:#d9ece5}
+.polish-pass .dock span{color:#24867f;text-shadow:0 2px 0 #fff}
+.polish-pass .guidance{background:linear-gradient(115deg,#fffdf0,#f5f9ef);border:1px solid #fff;box-shadow:0 6px 22px #427d7220}
+.polish-pass dialog{background:linear-gradient(145deg,#fffef6,#eff6ef);box-shadow:0 24px 90px #173f4b50;border:2px solid #fff}
+.polish-pass dialog::backdrop{background:#164d534a}
+.polish-pass .product-row{border-color:#dce8dd}
+.polish-pass .product-icon{background:#e0eee6;border-radius:12px;padding:7px}
+.polish-pass button:focus-visible,.polish-pass [role=button]:focus-visible{outline:3px solid #e3ac53;outline-offset:3px}
+.polish-pass .visitor-bubble rect{fill:#fffef3;stroke:#d7e8dd;stroke-width:1.5}
+.polish-pass .visitor-bubble text{fill:#28565a}
+.polish-pass .purchase-bag,.polish-pass .received-box,.polish-pass .received-fish{filter:drop-shadow(1px 2px 1px #244b5540)}
+.polish-pass .brand-badge{filter:drop-shadow(0 1px 0 #fff6)}
+@media(prefers-reduced-motion:reduce){.polish-pass *{scroll-behavior:auto}}
