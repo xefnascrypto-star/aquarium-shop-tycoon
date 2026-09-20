@@ -81,11 +81,30 @@ settling=true;
 try{a.result=sellBasket(a.basket,{requestId:a.requestId,visitorId:a.id,locations:locations(a)});if(a.result){a.paid=true;ShopStaff.complete(a.id);a.server=null;walk(a,'leaving')}else fail(a,ShopI18n.t('staffNoStock'))}finally{settling=false;saveGame(false)}
 }else if(a.phase==='turning')walk(a,'leaving');
 }
+function reactionIcon(a){
+ const r=a.reason||'';
+ if(r.includes('agotado')||r.includes('stock')||r.includes('No queda'))return '✕📦';
+ if(r.includes('tiempo')||r.includes('Late')||r.includes('espera'))return '✕⏳';
+ if(r.includes('camino')||r.includes('estrecho')||r.includes('accesible')||r.includes('bloqueada')||r.includes('recorrido'))return '✕🚫';
+ return '✕';
+}
 function draw(){
 for(const a of actors){
  const feet=M.project(grid(a).room,a.position.x,a.position.y);
- const t=(key,params)=>ShopI18n.t(key,params),normalBubble=({entering:a.requestId?t('order'):a.kit?t('aquarium'):a.specific?t('seeking',{name:products[a.product]?.name}):t('hello'),'to-product':a.specific?t('seeking',{name:products[a.product]?.name}):t('look'),browsing:a.kit?t('set'):products[a.product]?.name,'to-queue':t(state.level>=9?'queue':'till'),queue:t(state.level>=9?'turn':'pay'),'to-counter':t('myTurn'),'service-queue':a.waitTime<2?t('staffWaiting'):'','staff-working':'','to-wait':'',checkout:'',leaving:t(a.result?'thanks':'bye'),turning:t('later'),waiting:t('blocked')})[a.phase]||'';
- const bubble=(a.phase==='entering'&&(a.specific||a.requestId)||a.phase==='turning')?normalBubble:'';
+ const t=(key,params)=>ShopI18n.t(key,params);
+ const pIcon=products[a.product]?.icon||(a.kit?'🐠':'🐟');
+ let bubble='';
+ if(a.phase==='entering'){
+  if(a.requestId||a.specific)bubble=pIcon;
+ }else if(a.phase==='to-product'||a.phase==='browsing'){
+  bubble=pIcon;
+ }else if(a.phase==='service-queue'||a.phase==='to-wait'||a.phase==='queue'||a.phase==='to-queue'){
+  bubble='⏳';
+ }else if(a.phase==='turning'){
+  bubble=reactionIcon(a);
+ }else if(a.phase==='waiting'){
+  bubble='🚫';
+ }
  Characters.update(a.node,{feet,phase:a.phase,moving:!!a.path,distance:a.distance,facing:a.facing,bubble,label:a.name+': '+status(a),result:a.result?'sale':a.lost?'empty':'pending'});
 }
 

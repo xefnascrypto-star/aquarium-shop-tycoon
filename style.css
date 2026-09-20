@@ -15,7 +15,7 @@
 @media(min-width:651px){#viewport{width:min(100%,760px);margin-top:18px}.camera{bottom:55px}.shop-status{margin-top:-82px}}
 
 /* Visitors are positioned by the shop clock, not looping CSS. */
-.live-visitor{cursor:pointer}.visitor-bubble{pointer-events:none}.visitor-bubble rect{fill:#fffae8;stroke:#d5dfc7;stroke-width:1.5}.visitor-bubble text{font:12px 'Trebuchet MS',sans-serif;fill:#3c7061}.live-visitor[data-phase=leaving] .visitor-bubble rect{fill:#e9f3d9}.live-visitor[data-result=empty] .visitor-bubble rect{fill:#fff0d6}
+.live-visitor{cursor:pointer}.visitor-bubble{pointer-events:none}.visitor-bubble rect{fill:#fffae8;stroke:#d5dfc7;stroke-width:1.5}.visitor-bubble text{font:12px 'Trebuchet MS',sans-serif;fill:#3c7061}.live-visitor[data-phase=leaving] .visitor-bubble rect{fill:#e9f3d9}.live-visitor[data-result=empty] .visitor-bubble rect{fill:#fff0d6}.live-visitor[data-phase=turning] .visitor-bubble rect{fill:#ffebe8;stroke:#e4a99f}.live-visitor[data-phase=turning] .visitor-bubble text{fill:#a63d30}
 
 /* Placement uses the same art, with independent floor transforms. */
 .mirrored-art text{transform-box:fill-box;transform-origin:center;transform:scaleX(-1)}
@@ -72,7 +72,7 @@
 
 .shop-clerk>path:nth-of-type(2){fill:var(--shop-color,#427d6d)}.shop-clerk.serving>path:nth-of-type(3){transform:rotate(-5deg);transform-origin:0 -40px}
 
-#incomingOrders{border-top:1px solid #d8ddc8;margin-top:16px;padding-top:12px}#incomingTitle{font-size:16px;margin:0 0 8px}#orderCapacity{font-size:12px;line-height:1.5}.incoming-order{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#edf1e4;padding:10px 12px;border-radius:12px;margin:7px 0}.incoming-order b{font-size:13px}.incoming-order small{display:block;font-size:11px;color:#63806f;margin-top:4px}.order-timer{font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap}.orders-empty{font-size:12px;color:#63806f}#delivery{max-height:260px;overflow-y:auto}
+#incomingOrders{border-top:1px solid #d8ddc8;margin-top:16px;padding-top:12px}#incomingTitle{font-size:16px;margin:0 0 8px}#orderCapacity{font-size:12px;line-height:1.5}.incoming-order{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#edf3e7;border:1px solid #d5e0cd;padding:10px 12px;border-radius:12px;margin:8px 0;transition:background 0.2s ease}.order-info{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}.order-header{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.order-supplier-badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;padding:2px 7px;border-radius:6px;background:#e1ebda;color:#355f50}.order-supplier-badge[data-supplier="wholesale"]{background:#f8ecd1;color:#7c581e}.order-status-tag{display:inline-flex;align-items:center;font-size:10px;font-weight:600;padding:2px 7px;border-radius:6px;background:#e4eee6;color:#2c6b54}.order-status-tag.transit::before{content:"●";font-size:8px;margin-right:4px;color:#398967;animation:pulse-dot 1.8s infinite ease-in-out}.order-status-tag.delivered{background:#d8ebd8;color:#236132}.order-items{font-size:13px;font-weight:bold;color:#1e3e36;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.order-meta{display:flex;align-items:center;gap:8px}.order-meta small{font-size:11px;color:#63806f}.order-timer-wrap{display:flex;flex-direction:column;align-items:flex-end;justify-content:center;flex-shrink:0}.order-timer{font-size:12px;font-weight:700;color:#2c5b4d;background:#fffdf0;border:1px solid #d7e4d0;padding:4px 8px;border-radius:8px;font-variant-numeric:tabular-nums;white-space:nowrap}.orders-empty{font-size:12px;color:#63806f}@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:0.3}}#delivery{max-height:260px;overflow-y:auto}
 
 .live-worker{cursor:pointer}.live-worker .visitor-bubble rect{fill:#fbefd3;stroke:#c8a465}.live-worker .visitor-bubble text{font-size:10px}.live-worker[data-task="preparing-fish"] .character-arm,.live-worker[data-task="preparing-product"] .character-arm{animation:prepare-order .8s ease-in-out infinite alternate;transform-origin:0 -39px}@keyframes prepare-order{from{transform:rotate(-7deg)}to{transform:rotate(7deg)}}@media(prefers-reduced-motion:reduce){.live-worker .character-arm{animation:none!important}}
 
@@ -89,3 +89,12 @@
 .live-worker .purchase-bag{filter:drop-shadow(1px 1px 1px #3b695c55)}
 #emergencyHint{background:#fff0cc;color:#795b2c}
 #rewardDebug{padding:12px;border:1px dashed #89a691;border-radius:12px;margin-top:10px}
+
+/* Display stock indicators and restock alerts */
+.display-stock-badge{pointer-events:none;user-select:none;filter:drop-shadow(0 2px 4px rgba(60,45,30,0.12))}
+.display-alert-banner{padding:11px 14px;border-radius:12px;font-size:12px;line-height:1.45;margin-bottom:12px;font-weight:500}
+.display-alert-banner.empty{background:#fdf0eb;color:#a4391b;border:1px solid #f0c3b4}
+.display-alert-banner.critical{background:#fcf6e8;color:#8c621d;border:1px solid #ebd4a8}
+.product-focus-highlight{background:#fff3d8!important;border-radius:12px;outline:2px solid #d4a359;transition:background 0.3s ease,outline 0.3s ease}
+.quick-order-link{min-height:38px;padding:6px 12px;font-size:11px;font-weight:bold;background:#e6eee0;color:#2c604f;border-radius:10px;white-space:nowrap;flex-shrink:0}
+

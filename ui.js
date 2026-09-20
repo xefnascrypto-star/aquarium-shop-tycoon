@@ -9,10 +9,47 @@ $('saveBtn').onclick=()=>saveGame();$('resetBtn').onclick=resetGame;
 function card(eyebrow,title,detail){$('unlockEyebrow').textContent=eyebrow;$('unlockTitle').textContent=title;$('unlockDetail').textContent=detail;$('unlockCard').hidden=false;clearTimeout(cardTimer);cardTimer=setTimeout(()=>$('unlockCard').hidden=true,8500)}
 $('unlockClose').onclick=()=>{$('unlockCard').hidden=true};
 window.addEventListener('levelup',e=>{const l=ShopDesign.levels.find(l=>l.level===e.detail);card('NIVEL '+e.detail+' · NUEVAS POSIBILIDADES',l.name,l.unlock+'. '+Object.values(products).filter(p=>p.level===e.detail&&!p.investment).map(p=>p.icon+' '+p.name).join(' · '));document.querySelector('.hud').classList.remove('level-glow');requestAnimationFrame(()=>document.querySelector('.hud').classList.add('level-glow'))});
-function productRows(keys,ordering=false,instance=null){return keys.map(k=>{const p=products[k],q=quote(k,orderQuantity),can=!orderReason(k,orderQuantity);return '<div class="product-row"><span class="product-icon">'+p.icon+'</span><div><b>'+p.name+'</b><small>'+(window.ShopLogistics?(instance?ShopLogistics.at(instance,k):ShopLogistics.exposed(k)):state.stock[k])+(instance?' en este expositor · ':' expuestos · ')+(window.ShopLogistics?ShopLogistics.stored(k):0)+' en recepción'+(window.ShopLogistics?.feedback(k)?' · '+ShopLogistics.feedback(k):'')+(state.kitRequested&&ShopDesign.kit[k]?' · 1 reservado':'')+' · venta '+p.sell+' 🪙</small></div>'+(ordering?'<button data-order="'+k+'" '+(!can?'disabled':'')+'>'+orderQuantity+' × · '+fmt(q?.cost||0)+' 🪙</button>':'')+'</div>'}).join('')}
+function productRows(keys,ordering=false,instance=null){return keys.map(k=>{const p=products[k],q=quote(k,orderQuantity),can=!orderReason(k,orderQuantity);return '<div class="product-row"><span class="product-icon">'+p.icon+'</span><div><b>'+p.name+'</b><small>'+(window.ShopLogistics?(instance?ShopLogistics.at(instance,k):ShopLogistics.exposed(k)):state.stock[k])+(instance?' en este expositor · ':' expuestos · ')+(window.ShopLogistics?ShopLogistics.stored(k):0)+' en recepción'+(window.ShopLogistics?.feedback(k)?' · '+ShopLogistics.feedback(k):'')+(state.kitRequested&&ShopDesign.kit[k]?' · 1 reservado':'')+' · venta '+p.sell+' 🪙</small></div>'+(ordering?'<button data-order="'+k+'" '+(!can?'disabled':'')+'>'+orderQuantity+' × · '+fmt(q?.cost||0)+' 🪙</button>':(instance?'<button type="button" class="quick-order-link" data-quick-focus="'+k+'">'+(ShopI18n.t('orderGoods')||'Pedir')+' →</button>':''))+'</div>'}).join('')}
+function focusProductInStock(productId){
+ if(productId&&products[productId]){
+  const filter=$('productFilter');
+  if(filter){
+   if(products[productId].vol===0&&filter.value==='goods')filter.value='all';
+   else if(products[productId].vol>0&&filter.value==='fish')filter.value='all';
+  }
+ }
+ showPanel('stock');
+ if(productId){
+  requestAnimationFrame(()=>{
+   const targetBtn=document.querySelector('#stock [data-order="'+productId+'"]');
+   const row=targetBtn?.closest('.product-row');
+   if(row){
+    row.scrollIntoView({behavior:'smooth',block:'center'});
+    row.classList.add('product-focus-highlight');
+    setTimeout(()=>row.classList.remove('product-focus-highlight'),2200);
+   }
+  });
+ }
+}
 function objectInfo(){
-const o=state.layout?.objects.find(o=>o.id===selectedInstance);if(!o)return;
-const keys=(ShopNavigation.goods[o.kind]||[]).filter(unlocked);$('objectInfo').innerHTML=keys.length?productRows(keys,false,o.id):'<p>Un rincón de tu tienda. Puedes cambiar su posición.</p>';
+ const o=state.layout?.objects.find(o=>o.id===selectedInstance);if(!o)return;
+ const keys=(ShopNavigation.goods[o.kind]||[]).filter(unlocked);
+ const st=window.ShopRestockIndicator?.getDisplayStatus(o.id,state.layout,state);
+ let banner='';
+ if(st?.status==='empty'){
+  banner='<div class="display-alert-banner empty" role="alert">'+ShopI18n.t('displayEmptyBanner')+'</div>';
+ }else if(st?.status==='critical'){
+  banner='<div class="display-alert-banner critical" role="status">'+ShopI18n.t('displayCriticalBanner')+'</div>';
+ }
+ $('objectInfo').innerHTML=banner+(keys.length?productRows(keys,false,o.id):'<p>Un rincón de tu tienda. Puedes cambiar su posición.</p>');
+ const target=st?.primaryProduct;
+ if(target&&products[target]&&(st.status==='empty'||st.status==='critical')){
+  $('objectStock').textContent=ShopI18n.t('orderFromSupplier',{name:products[target].name});
+  $('objectStock').onclick=()=>focusProductInStock(target);
+ }else{
+  $('objectStock').textContent=ShopI18n.t('orderGoods')||'Pedir productos';
+  $('objectStock').onclick=()=>showPanel('stock');
+ }
 }
 function openObject(id,instance){
 selectedInstance=instance||state.layout.objects.find(o=>ShopLayout.catalog[o.kind].action===id)?.id;
@@ -21,6 +58,7 @@ if(id==='warehouse')return showPanel('stock','La trastienda');
 objectInfo();showPanel('object',ShopLayout.catalog[state.layout.objects.find(o=>o.id===selectedInstance)?.kind]?.label||'Tu tienda');
 }
 $('objectStock').onclick=()=>showPanel('stock');$('objectEdit').onclick=()=>shopEditor.begin(selectedInstance);
+$('objectInfo').onclick=e=>{const b=e.target.closest('[data-quick-focus]');if(b)focusProductInStock(b.dataset.quickFocus)};
 world.addEventListener('click',e=>{const g=e.target.closest('[data-object]');if(g&&!dragged&&!window.shopEditor?.active)openObject(g.dataset.object,e.target.closest('[data-instance]')?.dataset.instance)});
 world.addEventListener('keydown',e=>{const g=e.target.closest('[data-object]');if(g&&!window.shopEditor?.active&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openObject(g.dataset.object,e.target.closest('[data-instance]')?.dataset.instance)}});
 $('stock').onclick=e=>{const b=e.target.closest('[data-order]');if(b)order(b.dataset.order,orderQuantity)};
@@ -54,10 +92,11 @@ $('wageStatus').textContent=state.employee?'Salarios pagados: '+state.wagesPaid+
 $('salesSummary').textContent=state.level>=8?'Compras intentadas: '+state.potential+' · ventas reales: '+state.served+' · perdidas: '+state.lost+'. Revisa stock y accesos.':'Cada compra necesita producto, un camino y atención en caja.';
 $('contractLink').hidden=state.level<4;$('teamLink').hidden=state.level<9;
 $('rescueBtn').hidden=!!incomingOrders().length||!!state.debt||state.money>=15||Object.entries(state.stock).some(([k,q])=>unlocked(k)&&q>0);
-for(const o of state.layout?.objects||[]){const node=world.querySelector('[data-instance="'+o.id+'"]');if(!node)continue;ShopFish.paint(node,o.kind,state.logistics?(state.logistics.bins[o.id]||{}):state.stock);const stocked=(ShopNavigation.goods[o.kind]||[]).some(k=>(window.ShopLogistics&&state.logistics?ShopLogistics.at(o.id,k):state.stock[k])>0);node.querySelectorAll('.fish-swim').forEach(g=>g.style.opacity=stocked?1:0);node.querySelectorAll('.shelf-goods').forEach(g=>g.style.opacity=stocked?1:.25);node.querySelectorAll('.shelf-extra').forEach(g=>g.style.display=state.level>=4?'block':'none');node.querySelectorAll('.warehouse-extra').forEach(g=>g.style.display=state.warehouse?'block':'none')}
+for(const o of state.layout?.objects||[]){const node=world.querySelector('[data-instance="'+o.id+'"]');if(!node)continue;ShopFish.paint(node,o.kind,state.logistics?(state.logistics.bins[o.id]||{}):state.stock);const stocked=(ShopNavigation.goods[o.kind]||[]).some(k=>(window.ShopLogistics&&state.logistics?ShopLogistics.at(o.id,k):state.stock[k])>0);node.querySelectorAll('.fish-swim').forEach(g=>g.style.opacity=stocked?1:0);node.querySelectorAll('.shelf-goods').forEach(g=>g.style.opacity=stocked?1:.25);node.querySelectorAll('.shelf-extra').forEach(g=>g.style.display=state.level>=4?'block':'none');node.querySelectorAll('.warehouse-extra').forEach(g=>g.style.display=state.warehouse?'block':'none');const ind=node.querySelector('.display-indicator');if(ind&&window.ShopRestockIndicator){const st=ShopRestockIndicator.getDisplayStatus(o.id,state.layout,state);ind.innerHTML=st?ShopRestockIndicator.renderBadge(st.status,o.kind,o.rotation):''}}
 objectInfo();
 }
 window.addEventListener('statechange',syncScene);
+window.addEventListener('layoutchange',syncScene);
 window.addEventListener('notice',e=>{$('toast').textContent=e.detail;$('toast').classList.add('visible');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('visible'),3200)});
 window.addEventListener('sale',e=>{$('saleEffect').innerHTML='<text class="coin-pop" text-anchor="middle" fill="#aa7a2e" font-size="25" font-weight="bold">+'+e.detail+' 🪙</text>'});
 let zoom=1,panX=0,panY=0;

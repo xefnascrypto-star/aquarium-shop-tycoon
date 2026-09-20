@@ -15,7 +15,7 @@ function objectMarkup(o,layout){
  // Reflection exchanges the two floor axes without tilting vertical artwork.
  const mirror=o.rotation===90?'scale(-1 1)':'';
  const inset=o.kind==='plant'?'translate(0 30)':'translate(0 7)';
- return '<g data-instance="'+o.id+'" data-object="'+c.action+'" role="button" tabindex="0" aria-label="'+c.label+'" transform="translate('+p.x+' '+p.y+')"><g class="'+(o.rotation===90?'mirrored-art':'')+'" transform="'+mirror+' '+inset+'">'+furnitureArt(o.kind)+'</g></g>';
+ return '<g data-instance="'+o.id+'" data-object="'+c.action+'" role="button" tabindex="0" aria-label="'+c.label+'" transform="translate('+p.x+' '+p.y+')"><g class="'+(o.rotation===90?'mirrored-art':'')+'" transform="'+mirror+' '+inset+'">'+furnitureArt(o.kind)+'</g><g class="display-indicator"></g></g>';
 }
 function drawFurniture(layout,gameState={}){
  const items=layout.objects.filter(o=>ShopLayout.owned(o,gameState)).sort((a,b)=>{const aa=ShopLayout.footprint(a),bb=ShopLayout.footprint(b);return (a.x+a.y+aa.width+aa.depth)-(b.x+b.y+bb.width+bb.depth)});

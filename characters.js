@@ -21,7 +21,18 @@ update(node,{feet,phase,moving,distance,facing,bubble,label,result}){
  node.querySelector('.character-head').setAttribute('transform',phase==='browsing'?'rotate(7 0 -49)':phase==='checkout'?'rotate(4 0 -49)':'');
  node.querySelector('.character-arm').setAttribute('transform',phase==='checkout'?'rotate(-12 0 -39)':'');
  node.querySelector('.purchase-bag').style.display=result==='sale'?'':'none';
- node.querySelector('.visitor-bubble').style.display=bubble?'':'none';node.querySelector('.visitor-bubble text').textContent=bubble;
+ const bubbleEl=node.querySelector('.visitor-bubble');
+ if(bubbleEl){
+  bubbleEl.style.display=bubble?'':'none';
+  bubbleEl.querySelector('text').textContent=bubble;
+  if(!node.classList.contains('live-worker')){
+   const isShort=bubble&&bubble.length<=3;
+   const w=isShort?32:110;
+   bubbleEl.setAttribute('transform','translate('+(-w/2)+' -117)');
+   bubbleEl.querySelector('rect').setAttribute('width',w);
+   bubbleEl.querySelector('text').setAttribute('x',w/2);
+  }
+ }
 },
 remove(node){node.remove()}
 };

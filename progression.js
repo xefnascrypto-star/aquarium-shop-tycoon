@@ -22,7 +22,27 @@ else {const empty=Object.keys(products).filter(k=>unlocked(k)&&state.stock[k]===
 status.hidden=!message;status.textContent=message;
 $('incomingTitle').textContent=t('ordersTitle');
 $('orderCapacity').textContent=t('ordersCapacity',{used:used(),reserved:reservedSpace(),free:Math.max(0,state.capacity-used()-reservedSpace()),capacity:state.capacity});
-const html=orders.length?orders.map(o=>'<article class="incoming-order" data-order-id="'+o.id+'"><div><b>'+o.q+' × '+products[o.k].name+'</b><small>'+t('supplier_'+o.supplier)+' · '+t('orderInTransit')+'</small><small>'+t('orderCost',{cost:o.cost===null?'—':fmt(o.cost)})+'</small></div><span class="order-timer">'+t('orderSeconds',{seconds:Math.ceil(o.remaining/1000)})+'</span></article>').join(''):'<p class="orders-empty">'+t('ordersEmpty')+'</p>';
+const html=orders.length?orders.map(o=>{
+  const supplierName = t("supplier_"+o.supplier);
+  const statusLabel = o.status === "delivered" ? t("orderDelivered") : t("orderInTransit");
+  const remainingSec = Math.ceil(o.remaining/1000);
+  const costLabel = t("orderCost",{cost:o.cost===null?"—":fmt(o.cost)});
+  return "<article class=\"incoming-order\" data-order-id=\""+o.id+"\">"+
+    "<div class=\"order-info\">"+
+      "<div class=\"order-header\">"+
+        "<span class=\"order-supplier-badge\" data-supplier=\""+o.supplier+"\">"+supplierName+"</span>"+
+        "<span class=\"order-status-tag "+(o.status==="delivered"?"delivered":"transit")+"\">"+statusLabel+"</span>"+
+      "</div>"+
+      "<b class=\"order-items\">"+o.q+" × "+products[o.k].name+"</b>"+
+      "<div class=\"order-meta\">"+
+        "<small>"+costLabel+"</small>"+
+      "</div>"+
+    "</div>"+
+    "<div class=\"order-timer-wrap\">"+
+      "<span class=\"order-timer\">"+t("orderSeconds",{seconds:remainingSec})+"</span>"+
+    "</div>"+
+  "</article>";
+}).join(""):`<p class="orders-empty">${t("ordersEmpty")}</p>`;
 if($('delivery').dataset.content!==html){$('delivery').innerHTML=html;$('delivery').dataset.content=html}
 if($('deliveryArt')){$('deliveryArt').innerHTML=next?'<g transform="translate(800 353)">'+box(0,-28,29,23,28)+'<text x="0" y="-40" text-anchor="middle" fill="#447561" font-size="15">▤ '+orders.length+' · '+Math.ceil(next.remaining/1000)+' s</text></g>':''}
 }
