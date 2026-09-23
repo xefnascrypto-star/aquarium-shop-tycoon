@@ -105,7 +105,7 @@ for(const a of actors){
  }else if(a.phase==='waiting'){
   bubble='🚫';
  }
- Characters.update(a.node,{feet,phase:a.phase,moving:!!a.path,distance:a.distance,facing:a.facing,bubble,label:a.name+': '+status(a),result:a.result?'sale':a.lost?'empty':'pending'});
+ Characters.update(a.node,{feet,phase:a.phase,moving:!!a.path,distance:a.distance,facing:a.facing,direction:a.direction,bubble,label:a.name+': '+status(a),result:a.result?'sale':a.lost?'empty':'pending',product:a.result?a.product:null});
 }
 
 const layer=$('furnitureLayer'),items=[...layer.querySelectorAll(':scope > [data-instance]')].map(node=>{const o=state.layout.objects.find(o=>o.id===node.dataset.instance);return {node,bounds:M.footprint(o)}});

@@ -35,5 +35,14 @@ function paint(node,kind,stock){
  }).join('');
  });
 }
-return {catalog,groups,fish,paint};
+function bag(key){
+ const s=catalog[key]||catalog.comet,k=catalog[key]?key:'comet';
+ return '<path d="M3-7H13L10-1Q25 12 16 25H0Q-7 12 6-1Z" fill="#e0f5ed" fill-opacity=".88" stroke="#669c9d" stroke-width="1.5"/>'+
+   '<path d="M-1 10Q8 8 19 11L16 24H0Z" fill="#77ced4" opacity=".8"/>'+
+   '<g class="bag-fish" data-species="'+k+'" transform="translate(8 16) scale(0.48)">'+fish(k)+'</g>'+
+   '<circle cx="14" cy="12" r="0.9" fill="#ffffff" opacity=".7"/>'+
+   '<circle cx="4" cy="15" r="0.6" fill="#ffffff" opacity=".6"/>'+
+   '<path d="M3-4H13" stroke="#64988c" stroke-width="2"/>';
+}
+return {catalog,groups,fish,paint,bag};
 })();

@@ -11,7 +11,7 @@ function createNode(w){
  const apron=document.createElementNS('http://www.w3.org/2000/svg','g');apron.innerHTML='<path d="M-10-39H10L12-15H-12Z" fill="#eee1bd"/><svg class="brand-badge" x="-7" y="-34" width="14" height="14" viewBox="0 0 64 64">'+ShopIdentity.mark().replace(/^<svg[^>]*>|<\/svg>$/g,'')+'</svg>';model.insertBefore(apron,head);
  node.addEventListener('click',()=>{if(!dragged)showPanel('team')});node.addEventListener('keydown',e=>{if(['Enter',' '].includes(e.key)){e.preventDefault();showPanel('team')}});
  const indicator=node.querySelector('.visitor-bubble');indicator.setAttribute('transform','translate(-13 -106)');indicator.querySelector('rect').setAttribute('width','26');indicator.querySelector('text').setAttribute('x','13');
- model.setAttribute('transform','scale('+ShopDesign.staffMotion.visualScale+')');node.querySelector('.purchase-bag').setAttribute('transform','translate(20 -31) scale(1.25)');
+ model.setAttribute('transform','scale('+ShopDesign.staffMotion.visualScale+')');node.querySelector('.purchase-bag').setAttribute('transform','translate(20 -24) scale(1.15)');
  w.node=node;
 }
 function route(w,goals,phase){
@@ -38,7 +38,7 @@ function pickup(w){
  w.objectId=o.id;
  return route(w,goals,'to-product');
 }
-function release(w){ShopLogistics.returnTransport(w.transportId);w.transportId=null;w.restock=null;w.job=null;w.carry=null;w.stop=0;w.objectId=null;w.remaining=0;const s=station(w);if(!s||!route(w,[s.cell],'returning')){w.path=null;w.motion=null;w.phase='blocked'}}
+function release(w){ShopLogistics.returnTransport(w.transportId);w.transportId=null;w.restock=null;w.job=null;w.carry=null;w.carryProduct=null;w.stop=0;w.objectId=null;w.remaining=0;const s=station(w);if(!s||!route(w,[s.cell],'returning')){w.path=null;w.motion=null;w.phase='blocked'}}
 function cancel(w){const a=context.actor(w.job);w.job=null;release(w);if(a&&!a.paid)context.fail(a,ShopI18n.t('staffBlocked'))}
 function ensure(){
  const defs=definitions();
@@ -87,14 +87,14 @@ function advance(dt){
  }
  if(w.phase==='collecting-stock'||w.phase==='restocking'){
  w.remaining-=dt;if(w.remaining>0)continue;
- if(w.phase==='collecting-stock'){const o=g().objects.find(o=>o.id===w.restock?.objectId);w.carry=products[w.restock?.k]?.vol===0?'fish':'goods';if(!o||!route(w,N.staffServices(g(),o),'carrying-stock'))release(w)}
+ if(w.phase==='collecting-stock'){const o=g().objects.find(o=>o.id===w.restock?.objectId);w.carry=products[w.restock?.k]?.vol===0?'fish':'goods';w.carryProduct=w.restock?.k||null;if(!o||!route(w,N.staffServices(g(),o),'carrying-stock'))release(w)}
  else {ShopLogistics.commit(w.restock);release(w);render();saveGame(false)}
  continue;
  }
  if(w.phase==='preparing-fish'||w.phase==='preparing-product'){
  w.remaining-=dt;if(w.remaining>0)continue;
  const a=context.actor(w.job);if(!a||!context.available(a)||!ShopLogistics.collect(w,a,a.stops[w.stop].objectId)){cancel(w);continue}
- if(w.phase==='preparing-fish')w.carry='fish';else if(!w.carry)w.carry='goods';
+ if(w.phase==='preparing-fish'){w.carry='fish';w.carryProduct=a.stops[w.stop]?.product||Object.keys(a.basket).find(k=>products[k]?.vol===0)||w.carryProduct;}else if(!w.carry){w.carry='goods';w.carryProduct=a.stops[w.stop]?.product||w.carryProduct;}
  w.stop++;
  if(w.stop<a.stops.length){if(!pickup(w))cancel(w)}
  else {const s=station(w);if(!s||!route(w,[s.cell],'carrying-order'))cancel(w);else context.ready(a,w)}
@@ -111,10 +111,10 @@ function draw(){
  const label=ShopI18n.t(({idle:'staffIdle',returning:'staffReturning','to-product':'staffServing','preparing-fish':'staffFish','preparing-product':'staffProduct','carrying-order':'staffCarrying','at-counter':'staffTill',checkout:'staffTill',blocked:'staffBlocked','to-receipt':'staffReceipt','collecting-stock':'staffCollect','carrying-stock':'staffRestockCarry',restocking:'staffRestock'})[w.phase]);
  const bubble=({ 'preparing-fish':'◌', 'preparing-product':'◌',checkout:'✓',restocking:'↥','collecting-stock':'↓'})[w.phase]||'';
  const feet=M.project(g().room,w.position.x,w.position.y);
- ShopCharacters.update(w.node,{feet,phase:(w.phase.startsWith('preparing')||w.phase==='restocking')?'browsing':w.phase,moving:!!w.path,distance:w.distance,facing:w.facing,bubble,label:ShopI18n.t('clerk')+': '+label,result:'pending'});
- w.node.dataset.task=w.phase;w.node.dataset.job=w.job??'';w.node.querySelector('.character-model>path').setAttribute('fill',ShopIdentity.colors[ShopIdentity.current.color]);
+ ShopCharacters.update(w.node,{feet,phase:(w.phase.startsWith('preparing')||w.phase==='restocking')?'browsing':w.phase,moving:!!w.path,distance:w.distance,facing:w.facing,direction:w.direction,bubble,label:ShopI18n.t('clerk')+': '+label,result:'pending'});
+ w.node.dataset.task=w.phase;w.node.dataset.job=w.job??'';const staffColorPath=w.node.querySelector('.character-model>path');if(staffColorPath)staffColorPath.setAttribute('fill',ShopIdentity.colors[ShopIdentity.current.color]);
  const bag=w.node.querySelector('.purchase-bag');bag.style.display=w.carry?'':'none';
- if(bag.dataset.carry!==(w.carry||'')){bag.dataset.carry=w.carry||'';bag.innerHTML=w.carry==='fish'?'<path d="M3-7H13L10-1Q25 12 16 25H0Q-7 12 6-1Z" fill="#e0f5ed" fill-opacity=".85" stroke="#669c9d" stroke-width="1.5"/><path d="M-1 10Q8 8 19 11L16 24H0Z" fill="#77ced4" opacity=".8"/><path d="M5 17L1 14V20Z" fill="#eda768"/><ellipse cx="9" cy="17" rx="5" ry="3" fill="#eda768"/><circle cx="11" cy="16" r=".8" fill="#41666b"/><path d="M3-4H13" stroke="#64988c" stroke-width="2"/>':'<path d="M-2 1L9-4L21 2V23L9 28L-2 21Z" fill="#d5b17c"/><path d="M9 8V28M-2 1L9 8L21 2" stroke="#ae895f" fill="none"/>'}
+ const curProd=w.carryProduct||(w.job&&context.actor(w.job)?.stops?.[Math.max(0,w.stop-1)]?.product)||(w.restock?.k)||'comet'; const bagKey=(w.carry||'')+(w.carry==='fish'?':'+curProd:''); if(bag.dataset.bagKey!==bagKey){bag.dataset.bagKey=bagKey;bag.dataset.carry=w.carry||'';bag.dataset.species=w.carry==='fish'?curProd:'';bag.innerHTML=w.carry==='fish'?(window.ShopFish?.bag?window.ShopFish.bag(curProd):'<path d="M3-7H13L10-1Q25 12 16 25H0Q-7 12 6-1Z" fill="#e0f5ed" fill-opacity=".85" stroke="#669c9d" stroke-width="1.5"/><path d="M-1 10Q8 8 19 11L16 24H0Z" fill="#77ced4" opacity=".8"/><path d="M5 17L1 14V20Z" fill="#eda768"/><ellipse cx="9" cy="17" rx="5" ry="3" fill="#eda768"/><circle cx="11" cy="16" r=".8" fill="#41666b"/><path d="M3-4H13" stroke="#64988c" stroke-width="2"/>'):'<path d="M-2 1L9-4L21 2V23L9 28L-2 21Z" fill="#d5b17c"/><path d="M9 8V28M-2 1L9 8L21 2" stroke="ae895f" fill="none"/>';}
  }
  return workers.map(w=>({node:w.node,bounds:{x:w.position.x-.28,y:w.position.y-.28,width:.56,depth:.56}}));
 }
